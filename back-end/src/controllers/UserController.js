@@ -8,12 +8,12 @@ const index = async (req, res) => {
 }
 
 const store = async (req, res) => {
-    const { username, email } = req.body
+    const { username, email, password } = req.body
     let user = await models.User.findByLogin(username)
     if (user)
         return Exception(res, 400, `User '${username}' already exists!`)
 
-    user = await models.User.create({ username, email });
+    user = await models.User.create({ username, email, password });
     return res.status(201).json(user)
 }
 
