@@ -14,7 +14,7 @@ const store = async (req, res) => {
         return Exception(res, 400, `User '${username}' already exists!`)
 
     user = await models.User.create({ username, email });
-    return res.json(user)
+    return res.status(201).json(user)
 }
 
 const update = async (req, res) => {
