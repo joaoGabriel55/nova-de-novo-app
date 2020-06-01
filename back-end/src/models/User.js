@@ -23,6 +23,13 @@ const user = (sequelize, DataTypes) => {
                 notEmpty: true,
             },
         },
+        token: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            validate: {
+                notEmpty: false,
+            },
+        },
     });
 
     // User.associate = models => {

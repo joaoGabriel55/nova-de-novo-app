@@ -1,13 +1,16 @@
+import dotenv from 'dotenv'
 import "core-js/stable"
 import "regenerator-runtime/runtime"
-
 import express from 'express'
 import routes from './routes'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import logger from 'morgan'
 
-import models, { sequelize } from './models';
+import models, { sequelize } from './models'
+
+// get config vars
+dotenv.config();
 
 
 const app = express()
@@ -22,12 +25,6 @@ app.use('/users', routes.user)
 
 const eraseDatabaseOnSync = true;
 
-sequelize.sync({ force: eraseDatabaseOnSync }).then(async () => {
-    app.listen(process.env.PORT, () =>
-        console.log(`Example app listening on port ${process.env.PORT}!`),
-    );
-});
-
-// server.listen(3333)
+sequelize.sync({ force: eraseDatabaseOnSync })
 
 export default app

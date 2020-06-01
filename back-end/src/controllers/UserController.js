@@ -1,6 +1,8 @@
+import bcrypt from 'bcrypt'
 import models, { sequelize } from '../models';
 import { Exception } from '../exceptions/responseException'
 
+const salt = 10
 // index, show, store, update, destroy
 
 const index = async (req, res) => {
@@ -13,8 +15,10 @@ const store = async (req, res) => {
     if (user)
         return Exception(res, 400, `User '${username}' already exists!`)
 
-    user = await models.User.create({ username, email, password });
-    return res.status(201).json(user)
+    let passwordHash = bcrypt.hashSync(password, salt);
+
+    await models.User.create({ username, email, password: passwordHash });
+    return res.status(201).json({ username, email })
 }
 
 const update = async (req, res) => {

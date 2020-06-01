@@ -3,10 +3,13 @@
 /**
  * Module dependencies.
  */
-
+import dotenv from 'dotenv'
 import app from '../index'
 import debugLib from 'debug'
 import http from 'http'
+
+// get config vars
+dotenv.config();
 
 var debug = debugLib('myapp:src')
 
