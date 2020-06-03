@@ -9,8 +9,7 @@ const url = process.env.DATABASE_URL_DEV
 const sequelize = new Sequelize(url, { dialect: 'postgres' });
 
 const models = {
-    User: sequelize.import('./User'),
-    Message: sequelize.import('./Message'),
+    User: sequelize.import('./User')
 };
 
 Object.keys(models).forEach((key) => {
