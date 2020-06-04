@@ -1,5 +1,5 @@
-const dressMaker = (sequelize, DataTypes) => {
-    const DressMaker = sequelize.define('dressmaker', {
+const customer = (sequelize, DataTypes) => {
+    const Customer = sequelize.define('customer', {
         name: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -7,40 +7,33 @@ const dressMaker = (sequelize, DataTypes) => {
                 notEmpty: true,
             },
         },
-        address: {
-            type: DataTypes.STRING,
-            allowNull: true,
-            validate: {
-                notEmpty: false,
-            },
-        },
         phone: {
             type: DataTypes.STRING,
             allowNull: false,
             validate: {
                 notEmpty: true,
-            },
+            }
         },
-        contract: {
+        email: {
             type: DataTypes.STRING,
             allowNull: false,
             validate: {
                 notEmpty: true,
-            },
+            }
         },
-        admission: {
-            type: DataTypes.DATEONLY,
+        address: {
+            type: DataTypes.STRING,
             allowNull: false,
             validate: {
                 notEmpty: true,
-            },
+            }
         },
-        resignation: {
-            type: DataTypes.DATEONLY,
+        addressDescription: {
+            type: DataTypes.STRING,
             allowNull: true,
             validate: {
                 notEmpty: false,
-            },
+            }
         },
         active: {
             type: DataTypes.BOOLEAN,
@@ -51,7 +44,7 @@ const dressMaker = (sequelize, DataTypes) => {
         }
     });
 
-    return DressMaker;
+    return Customer;
 };
 
-export default dressMaker;
+export default customer;
