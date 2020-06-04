@@ -40,14 +40,24 @@ const index = async (req, res) => {
     if (!(req.query.hasOwnProperty('limit') && req.query.hasOwnProperty('offset')))
         return Exception(res, 400, 'This request must be contains limit and offset')
 
+    const orderBy = req.query.orderBy
+    const like = req.query.like
     const limit = req.query.limit
     const offset = req.query.offset
+
+    const selector = like ? {
+        name: {
+            [Op.like]: `%${like}%`
+        },
+        active: true
+    } : { active: true }
 
     try {
 
         const dressmaker = await models.Dressmaker.findAndCountAll(
             {
-                where: { active: true },
+                order: orderBy ? [['name', orderBy.toUpperCase()]] : [],
+                where: selector,
                 limit: limit,
                 offset: offset,
             }
@@ -57,6 +67,18 @@ const index = async (req, res) => {
         return Exception(res, 500, 'Error to retrieve Customers')
     }
 
+}
+
+const findById = async (req, res) => {
+    const idRequest = parseInt(req.params.id)
+    try {
+        const dressmakerFound = await models.Dressmaker.findOne({ where: { id: idRequest, active: true } })
+        if (!dressmakerFound)
+            return Exception(res, 404, `Dressmaker ${idRequest} not found`)
+        return res.json(dressmakerFound)
+    } catch (error) {
+        return Exception(res, 500, 'Error to retrieve Dressmaker')
+    }
 }
 
 const store = async (req, res) => {
@@ -119,4 +141,4 @@ const destroy = async (req, res) => {
     }
 }
 
-export default { index, store, update, destroy }
+export default { index, findById, store, update, destroy }

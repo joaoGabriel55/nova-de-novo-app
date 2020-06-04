@@ -1,7 +1,8 @@
 import models, { sequelize } from '../models';
 import { validateEmail, validatePhone } from '../utils/validatorUtils'
 import { Exception } from '../exceptions/responseException'
-
+const Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 
 const validateCustomer = (res, customer) => {
 
@@ -30,22 +31,45 @@ const index = async (req, res) => {
     if (!(req.query.hasOwnProperty('limit') && req.query.hasOwnProperty('offset')))
         return Exception(res, 400, 'This request must be contains limit and offset')
 
+    const orderBy = req.query.orderBy
+    const like = req.query.like
     const limit = req.query.limit
     const offset = req.query.offset
+
+    const selector = like ? {
+        name: {
+            [Op.like]: `%${like}%`
+        },
+        active: true
+    } : { active: true }
 
     try {
         const customers = await models.Customer.findAndCountAll(
             {
-                where: { active: true },
+                order: orderBy ? [['name', orderBy.toUpperCase()]] : [],
+                where: selector,
                 limit: limit,
                 offset: offset,
             }
         )
         return res.json(customers)
     } catch (error) {
+        console.log(error)
         return Exception(res, 500, 'Error to retrieve Customers')
     }
 
+}
+
+const findById = async (req, res) => {
+    const idRequest = parseInt(req.params.id)
+    try {
+        const customerFound = await models.Customer.findOne({ where: { id: idRequest, active: true } })
+        if (!customerFound)
+            return Exception(res, 404, `Customer ${idRequest} not found`)
+        return res.json(customerFound)
+    } catch (error) {
+        return Exception(res, 500, 'Error to retrieve Customer')
+    }
 }
 
 const store = async (req, res) => {
@@ -109,4 +133,4 @@ const destroy = async (req, res) => {
     }
 }
 
-export default { index, store, update, destroy }
+export default { index, findById, store, update, destroy }
