@@ -11,7 +11,10 @@ const sequelize = new Sequelize(url, { dialect: 'postgres' });
 const models = {
     User: sequelize.import('./User'),
     Customer: sequelize.import('./Customer'),
-    Dressmaker: sequelize.import('./Dressmaker')
+    Dressmaker: sequelize.import('./Dressmaker'),
+    Service: sequelize.import('./Service'),
+    ServiceType: sequelize.import('./ServiceType'),
+    ServiceOrder: sequelize.import('./ServiceOrder')
 };
 
 Object.keys(models).forEach((key) => {
