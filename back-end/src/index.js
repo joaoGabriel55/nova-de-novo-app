@@ -32,6 +32,8 @@ app.use('/users', authenticateToken, routes.user)
 app.use('/customers', routes.customer)
 app.use('/dressmakers', routes.dressmaker)
 app.use('/services', routes.service)
+app.use('/service-types', routes.serviceType)
+app.use('/service-orders', routes.serviceOrder)
 
 function authenticateToken(req, res, next) {
     // Gather the jwt access token from the request header

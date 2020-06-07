@@ -7,6 +7,10 @@ const validateService = (res, service) => {
 
     if (!service.price)
         return Exception(res, 400, 'Price is required')
+
+    if (!service.serviceOrderId)
+        return Exception(res, 400, 'Service order ID is required')
+
 }
 
 const index = async (req, res) => {
@@ -19,7 +23,7 @@ const index = async (req, res) => {
 
         return res.json(services)
     } catch (error) {
-        return Exception(res, 500, 'Error to retrieve Customers')
+        return Exception(res, 500, 'Error to retrieve Service')
     }
 }
 
@@ -36,11 +40,13 @@ const findById = async (req, res) => {
 }
 
 const store = async (req, res) => {
-    const { name, price } = req.body
+    const { name, price, serviceOrderId } = req.body
 
-    const service = { name, price }
+    const service = { name, price, serviceOrderId }
 
-    validateService(res, service)
+    const error = validateService(res, service)
+    if (error)
+        return error
 
     try {
         await models.Service.create(service);
@@ -51,7 +57,7 @@ const store = async (req, res) => {
 }
 
 const update = async (req, res) => {
-    const { id, name, price } = req.body
+    const { id, name, price, serviceOrderId } = req.body
     const idRequest = req.params.id
 
     console.log(idRequest, id)
@@ -59,12 +65,14 @@ const update = async (req, res) => {
     if (parseInt(idRequest) !== id)
         return Exception(res, 400, 'Path ID and payload ID does not matches')
 
-    const service = { id, name, price }
+    const service = { id, name, price, serviceOrderId }
 
     if (!await models.Service.findOne({ where: { id: id } }))
         return Exception(res, 404, 'Service not found')
 
-    validateService(res, service)
+    const error = validateService(res, service)
+    if (error)
+        return error
 
     try {
         await models.Service.update(service, { where: { id: id } })

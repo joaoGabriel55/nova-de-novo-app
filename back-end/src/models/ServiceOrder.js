@@ -1,12 +1,5 @@
 const serviceOrder = (sequelize, DataTypes) => {
     const ServiceOrder = sequelize.define('service_order', {
-        name: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-                notEmpty: true,
-            },
-        },
         deliveryDate: {
             type: DataTypes.DATE,
             allowNull: false,
@@ -68,6 +61,24 @@ const serviceOrder = (sequelize, DataTypes) => {
 
     ServiceOrder.associate = models => {
         ServiceOrder.hasMany(models.Service, { onDelete: 'CASCADE' })
+    }
+
+    ServiceOrder.createServiceOrder = async (customerId, dressmakerId, serviceOrder) => {
+        try {
+            const result = await ServiceOrder.create({
+                deliveryDate: serviceOrder.deliveryDate,
+                entryDate: serviceOrder.entryDate,
+                deliveryPeriod: serviceOrder.deliveryPeriod,
+                totalPrice: serviceOrder.totalPrice,
+                status: serviceOrder.status,
+                customerId: customerId,
+                dressmakerId: dressmakerId,
+            })
+            return result
+        } catch (error) {
+            console.log(error)
+            return null
+        }
     }
 
     return ServiceOrder;

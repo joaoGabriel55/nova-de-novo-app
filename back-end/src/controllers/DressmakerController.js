@@ -86,7 +86,10 @@ const store = async (req, res) => {
     const dressmaker = {
         name, phone, email, address, contract, admission: new Date(), active: true
     }
-    validateDressmaker(res, dressmaker)
+
+    const error = validateDressmaker(res, dressmaker)
+    if (error)
+        return error
 
     try {
         await models.Dressmaker.create(dressmaker);
@@ -113,7 +116,9 @@ const update = async (req, res) => {
     if (!await models.Dressmaker.findOne(selector))
         return Exception(res, 404, 'Dressmaker not found')
 
-    validateDressmaker(res, dressmaker)
+    const error = validateDressmaker(res, dressmaker)
+    if (error)
+        return error
 
     try {
         await models.Dressmaker.update(dressmaker, selector)

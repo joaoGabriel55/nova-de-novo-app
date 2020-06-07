@@ -12,7 +12,6 @@ const validateCustomer = (res, customer) => {
     if (!customer.phone || customer.phone === '')
         return Exception(res, 400, 'Phone is required')
 
-
     if (!validatePhone(customer.phone))
         return Exception(res, 400, 'Phone is not valid')
 
@@ -75,7 +74,9 @@ const findById = async (req, res) => {
 const store = async (req, res) => {
     const { name, phone, email, address } = req.body
 
-    validateCustomer(res, { name, phone, email, address })
+    const error = validateCustomer(res, { name, phone, email, address })
+    if (error)
+        return error
 
     const customer = { name, phone, email, address, active: true }
 
@@ -100,7 +101,9 @@ const update = async (req, res) => {
     if (!await models.Customer.findOne({ where: { id: id, active: true } }))
         return Exception(res, 404, 'Customer not found')
 
-    validateCustomer(res, { name, phone, email, address })
+    const error = validateCustomer(res, { name, phone, email, address })
+    if (error)
+        return error
 
     try {
         await models.Customer.update(
