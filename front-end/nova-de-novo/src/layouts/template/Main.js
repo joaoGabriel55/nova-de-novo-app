@@ -7,7 +7,7 @@ import NavDrawer from './navDrawer/NavDrawer';
 
 import Container from '@material-ui/core/Container';
 
-export const drawerWidth = 250;
+export const drawerWidth = 258;
 
 export default function Main(props) {
     const { children } = props;

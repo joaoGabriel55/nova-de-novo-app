@@ -16,10 +16,10 @@ import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
 import IconButton from '@material-ui/core/IconButton';
 import Tooltip from '@material-ui/core/Tooltip';
-// import FormControlLabel from '@material-ui/core/FormControlLabel';
-// import Switch from '@material-ui/core/Switch';
 import DeleteIcon from '@material-ui/icons/Delete';
-// import FilterListIcon from '@material-ui/icons/FilterList';
+
+import DataTablePaginationActions from './DataTablePaginationActions'
+
 
 function descendingComparator(a, b, orderBy) {
     if (b[orderBy] < a[orderBy]) {
@@ -188,7 +188,7 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-export default function EnhancedTable(props) {
+export default function DataTable(props) {
     const { title, header, rows } = props
 
     const classes = useStyles();
@@ -328,6 +328,7 @@ export default function EnhancedTable(props) {
                     classes={{ spacer: classes.spacer }}
                     onChangePage={handleChangePage}
                     onChangeRowsPerPage={handleChangeRowsPerPage}
+                    ActionsComponent={DataTablePaginationActions}
                 />
             </Paper>
         </div>

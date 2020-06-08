@@ -1,7 +1,7 @@
 import React from 'react';
 import { formatDate, formatPhoneNumber } from '../../utils/FormatterUtil'
 
-import DataTable from '../../components/DataTable'
+import DataTable from '../../components/dataTable/DataTable'
 import CustomerDialog from './CustomerDialog'
 
 import { getCustomers } from '../../services/CustomerService'
@@ -20,7 +20,7 @@ function Customers() {
   const [customers, setCustomers] = React.useState([])
 
 
-  async function handleAddDev(data) {
+  async function handleAddCustomer(data) {
     console.log(data)
   }
 
@@ -45,7 +45,7 @@ function Customers() {
   return (
     <>
       <DataTable title="Clientes" header={headCells} rows={customers} />
-      <CustomerDialog onSubmit={handleAddDev} />
+      <CustomerDialog onSubmit={handleAddCustomer} />
     </>
   )
 }
