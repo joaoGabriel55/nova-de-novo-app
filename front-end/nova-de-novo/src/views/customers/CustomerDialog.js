@@ -1,12 +1,12 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-
+import { snackbarService } from "uno-material-ui";
+import { removeMaskPhoneNumber } from '../../utils/FormatterUtil'
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
-// import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { Add } from '@material-ui/icons';
 import Fab from '@material-ui/core/Fab';
@@ -17,8 +17,11 @@ import theme from '../../theme'
 
 import { CustomerModel } from '../../models/CustomerModel'
 
+import { createCustomer, updateCustomer } from '../../services/CustomerService'
+
 export default function CustomerDialog(props) {
-    const { onSubmit } = props
+    const { onChange, editData, onClearEditData } = props
+
     const classes = useStyles();
     const [open, setOpen] = React.useState(false);
 
@@ -31,18 +34,46 @@ export default function CustomerDialog(props) {
         })
     }
 
+    React.useEffect(() => {
+        if (editData) {
+            handleClickOpen(editData)
+        }
+    })
+
     async function handleSubmit(e) {
         e.preventDefault()
-        await onSubmit(customer)
-        setCustomer(new CustomerModel())
-        setOpen(false);
+        try {
+            customer.phone = removeMaskPhoneNumber(customer.phone)
+
+            const customerId = customer.id;
+            if (!customerId)
+                await createCustomer(customer)
+            else
+                await updateCustomer(customerId, customer)
+
+            const message = `Cliente ${customer.name} ${customerId ? 'atualizado' : 'cadastrado'} com sucesso!`
+
+            setCustomer(new CustomerModel())
+            setOpen(false)
+            snackbarService.showSnackbar(message, 'success')
+            await onChange()
+        }
+        catch (err) {
+            console.log(err)
+            snackbarService.showSnackbar('Erro ao cadastrar o cliente', 'error')
+        }
     }
 
-    const handleClickOpen = () => {
+    const handleClickOpen = (editData) => {
+        if (editData) {
+            setCustomer(editData)
+            onClearEditData()
+        }
         setOpen(true);
     };
 
     const handleClose = () => {
+        setCustomer(new CustomerModel())
         setOpen(false);
     };
 
@@ -59,7 +90,8 @@ export default function CustomerDialog(props) {
                 maxWidth="sm"
                 fullWidth={true}>
                 <DialogTitle id="form-dialog-title">
-                    <div style={{ color: theme.palette.secondary.main }}>Cadastrar novo cliente</div>
+                    <div style={{ color: theme.palette.secondary.main }}>
+                        {`${customer.id ? 'Atualizar' : 'Cadastrar novo'} cliente`}</div>
                 </DialogTitle>
                 <form onSubmit={handleSubmit}>
                     <DialogContent>
@@ -143,8 +175,8 @@ export default function CustomerDialog(props) {
                             color="primary"
                             style={{ color: 'white' }}
                             disableElevation>
-                            Cadastrar
-                    </Button>
+                            {`${customer.id ? 'Atualizar' : 'Cadastrar'}`}
+                        </Button>
                     </DialogActions>
                 </form>
             </Dialog>

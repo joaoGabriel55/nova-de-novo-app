@@ -18,34 +18,46 @@ const headCells = [
 
 function Customers() {
   const [customers, setCustomers] = React.useState([])
+  const [editCustomer, setEditCustomer] = React.useState(null)
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(5);
 
+  async function getCustomersAPI() {
+    const response = await getCustomers(5, 0) // TODO
+    for (let elem of response.data.rows) {
+      if (elem['createdAt'])
+        elem['createdAt'] = formatDate(elem['createdAt'])
+      if (elem['updatedAt'])
+        elem['updatedAt'] = formatDate(elem['updatedAt'])
+      if (elem['phone'])
+        elem['phone'] = formatPhoneNumber(elem['phone'])
+    }
+    setCustomers(response.data.rows)
+  }
 
-  async function handleAddCustomer(data) {
-    console.log(data)
+  async function onChangeData() {
+    await getCustomersAPI()
+  }
+
+  function onEditData(data) {
+    setEditCustomer(data)
+  }
+
+  function onClearEditData() {
+    setEditCustomer(null)
   }
 
   React.useEffect(() => {
     async function loadCustomers() {
-      const response = await getCustomers(5, 0)
-      for (let elem of response.data.rows) {
-        if (elem['createdAt'])
-          elem['createdAt'] = formatDate(elem['createdAt'])
-        if (elem['updatedAt'])
-          elem['updatedAt'] = formatDate(elem['updatedAt'])
-        if (elem['phone'])
-          elem['phone'] = formatPhoneNumber(elem['phone'])
-      }
-      setCustomers(response.data.rows)
+      await getCustomersAPI()
     }
     loadCustomers()
   }, [])
 
-
-
   return (
     <>
-      <DataTable title="Clientes" header={headCells} rows={customers} />
-      <CustomerDialog onSubmit={handleAddCustomer} />
+      <DataTable title="Clientes" header={headCells} rows={customers} onEditData={onEditData} />
+      <CustomerDialog onChange={onChangeData} editData={editCustomer} onClearEditData={onClearEditData} />
     </>
   )
 }

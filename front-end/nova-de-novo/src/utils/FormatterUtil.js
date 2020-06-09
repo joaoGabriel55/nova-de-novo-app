@@ -12,3 +12,8 @@ export const formatPhoneNumber = (phoneNumberString) => {
     }
     return null
 }
+
+export const removeMaskPhoneNumber = (phoneNumberString) => {
+    let phoneOnlyNumbers = phoneNumberString
+    return phoneOnlyNumbers.replace("(", "").replace(")", "").replace("-", "").replace(" ", "")
+}

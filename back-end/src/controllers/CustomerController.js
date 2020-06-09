@@ -72,13 +72,13 @@ const findById = async (req, res) => {
 }
 
 const store = async (req, res) => {
-    const { name, phone, email, address } = req.body
+    const { name, phone, email, address, addressDescription } = req.body
 
     const error = validateCustomer(res, { name, phone, email, address })
     if (error)
         return error
 
-    const customer = { name, phone, email, address, active: true }
+    const customer = { name, phone, email, address, addressDescription, active: true }
 
     try {
         await models.Customer.create(customer);
@@ -90,7 +90,7 @@ const store = async (req, res) => {
 
 const update = async (req, res) => {
 
-    const { id, name, phone, email, address } = req.body
+    const { id, name, phone, email, address, addressDescription } = req.body
     const idRequest = req.params.id
 
     console.log(idRequest, id)
@@ -107,7 +107,7 @@ const update = async (req, res) => {
 
     try {
         await models.Customer.update(
-            { name, phone, email, address },
+            { name, phone, email, address, addressDescription },
             { where: { id: id } }
         )
         return res.status(200).json({ name })

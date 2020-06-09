@@ -9,7 +9,7 @@ import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import LastPageIcon from '@material-ui/icons/LastPage';
 
 
-const useStyles1 = makeStyles((theme) => ({
+const useStyles = makeStyles((theme) => ({
     root: {
         flexShrink: 0,
         marginLeft: theme.spacing(2.5),
@@ -17,7 +17,7 @@ const useStyles1 = makeStyles((theme) => ({
 }));
 
 function DataTablePaginationActions(props) {
-    const classes = useStyles1();
+    const classes = useStyles();
     const theme = useTheme();
     const { count, page, rowsPerPage, onChangePage } = props;
 

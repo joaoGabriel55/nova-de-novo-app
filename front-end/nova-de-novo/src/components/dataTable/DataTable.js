@@ -19,6 +19,7 @@ import Tooltip from '@material-ui/core/Tooltip';
 import DeleteIcon from '@material-ui/icons/Delete';
 
 import DataTablePaginationActions from './DataTablePaginationActions'
+import { Edit } from '@material-ui/icons';
 
 
 function descendingComparator(a, b, orderBy) {
@@ -85,6 +86,8 @@ function EnhancedTableHead(props) {
                         </TableSortLabel>
                     </TableCell>
                 ))}
+                <TableCell padding="checkbox">
+                </TableCell>
             </TableRow>
         </TableHead>
     );
@@ -189,7 +192,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function DataTable(props) {
-    const { title, header, rows } = props
+    const { title, header, rows, onEditData } = props
 
     const classes = useStyles();
     const [order, setOrder] = React.useState('asc');
@@ -230,6 +233,10 @@ export default function DataTable(props) {
             );
         }
         setSelected(newSelected);
+    };
+
+    const handleEditClick = (data) => {
+        onEditData(data)
     };
 
     const handleChangePage = (event, newPage) => {
@@ -275,7 +282,6 @@ export default function DataTable(props) {
                                     return (
                                         <TableRow
                                             hover
-                                            onClick={(event) => handleClick(event, row)}
                                             role="checkbox"
                                             aria-checked={isItemSelected}
                                             tabIndex={-1}
@@ -284,6 +290,7 @@ export default function DataTable(props) {
                                         >
                                             <TableCell padding="checkbox">
                                                 <Checkbox
+                                                    onClick={(event) => handleClick(event, row)}
                                                     checked={isItemSelected}
                                                     inputProps={{ 'aria-labelledby': labelId }}
                                                 />
@@ -307,6 +314,13 @@ export default function DataTable(props) {
                                                 }
                                                 return null;
                                             })}
+                                            <TableCell padding="checkbox">
+                                                <IconButton
+                                                    aria-label="edit"
+                                                    onClick={() => handleEditClick(row)}>
+                                                    <Edit />
+                                                </IconButton>
+                                            </TableCell>
                                         </TableRow>
                                     );
                                 })}

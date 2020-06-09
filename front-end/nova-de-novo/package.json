@@ -15,7 +15,8 @@
     "react-input-mask": "^2.0.4",
     "react-moment": "^0.9.7",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "3.4.1"
+    "react-scripts": "3.4.1",
+    "uno-material-ui": "^2.0.6"
   },
   "scripts": {
     "start": "react-scripts start",
