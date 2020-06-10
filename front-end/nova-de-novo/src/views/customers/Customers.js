@@ -1,10 +1,10 @@
 import React from 'react';
 import { formatDate, formatPhoneNumber } from '../../utils/FormatterUtil'
-
+import { snackbarService } from "uno-material-ui";
 import DataTable from '../../components/dataTable/DataTable'
 import CustomerDialog from './CustomerDialog'
 
-import { getCustomers } from '../../services/CustomerService'
+import { getCustomers, getCustomersLike } from '../../services/CustomerService'
 
 const headCells = [
   { id: 'name', numeric: false, disablePadding: true, label: 'Nome' },
@@ -21,22 +21,43 @@ function Customers() {
   const [editCustomer, setEditCustomer] = React.useState(null)
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [countDataCollection, setCountDataCollection] = React.useState(0);
+  // const [searchName, set] = React.useState(null)
 
-  async function getCustomersAPI() {
-    const response = await getCustomers(5, 0) // TODO
-    for (let elem of response.data.rows) {
-      if (elem['createdAt'])
-        elem['createdAt'] = formatDate(elem['createdAt'])
-      if (elem['updatedAt'])
-        elem['updatedAt'] = formatDate(elem['updatedAt'])
-      if (elem['phone'])
-        elem['phone'] = formatPhoneNumber(elem['phone'])
+  async function getCustomersAPI(rowsPerPage, page, name) {
+    try {
+      let response = null
+      if (!name)
+        response = await getCustomers(rowsPerPage, page)
+      else
+        response = await getCustomersLike(rowsPerPage, page, name)
+
+      for (let elem of response.data.rows) {
+        if (elem['createdAt'])
+          elem['createdAt'] = formatDate(elem['createdAt'])
+        if (elem['updatedAt'])
+          elem['updatedAt'] = formatDate(elem['updatedAt'])
+        if (elem['phone'])
+          elem['phone'] = formatPhoneNumber(elem['phone'])
+      }
+
+      setCountDataCollection(response.data.count)
+      setRowsPerPage(rowsPerPage)
+      setPage(page)
+      setCustomers(response.data.rows)
+
+    } catch (error) {
+      snackbarService.showSnackbar('Problema ao carregar clientes', 'error')
     }
-    setCustomers(response.data.rows)
   }
 
   async function onChangeData() {
-    await getCustomersAPI()
+    await getCustomersAPI(rowsPerPage, page)
+  }
+
+  async function onSearchData(data) {
+    if (data.target.value)
+      await getCustomersAPI(rowsPerPage, page, data.target.value)
   }
 
   function onEditData(data) {
@@ -48,15 +69,25 @@ function Customers() {
   }
 
   React.useEffect(() => {
-    async function loadCustomers() {
-      await getCustomersAPI()
+    async function loadCustomers(rowsPerPage, page) {
+      await getCustomersAPI(rowsPerPage, page)
     }
-    loadCustomers()
-  }, [])
+    loadCustomers(rowsPerPage, page)
+  }, [rowsPerPage, page, countDataCollection])
 
   return (
     <>
-      <DataTable title="Clientes" header={headCells} rows={customers} onEditData={onEditData} />
+      <DataTable title="Clientes"
+        header={headCells}
+        onSearchData={onSearchData}
+        rows={customers}
+        onEditData={onEditData}
+        page={page}
+        setPage={setPage}
+        rowsPerPage={rowsPerPage}
+        setRowsPerPage={setRowsPerPage}
+        countDataCollection={countDataCollection}
+      />
       <CustomerDialog onChange={onChangeData} editData={editCustomer} onClearEditData={onClearEditData} />
     </>
   )

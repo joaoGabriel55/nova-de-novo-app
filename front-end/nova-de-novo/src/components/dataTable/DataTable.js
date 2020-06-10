@@ -18,6 +18,9 @@ import IconButton from '@material-ui/core/IconButton';
 import Tooltip from '@material-ui/core/Tooltip';
 import DeleteIcon from '@material-ui/icons/Delete';
 
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import TextField from '@material-ui/core/TextField'
+
 import DataTablePaginationActions from './DataTablePaginationActions'
 import { Edit } from '@material-ui/icons';
 
@@ -119,13 +122,17 @@ const useToolbarStyles = makeStyles((theme) => ({
                 backgroundColor: theme.palette.secondary.dark,
             },
     title: {
-        flex: '1 1 80%',
+        flex: '1 0 50%',
     },
 }));
 
 const EnhancedTableToolbar = (props) => {
     const classes = useToolbarStyles();
-    const { title, numSelected } = props;
+    const { title, numSelected, onSearchData } = props;
+
+    const handleSearch = async e => {
+        await onSearchData(e)
+    }
 
     return (
         <Toolbar
@@ -138,9 +145,22 @@ const EnhancedTableToolbar = (props) => {
                     {numSelected} selecionados
                 </Typography>
             ) : (
-                    <Typography className={classes.title} variant="h6" id="tableTitle" component="div">
-                        {title}
-                    </Typography>
+                    <>
+                        <Typography className={classes.title} variant="h6" id="tableTitle" component="div">
+                            {title}
+                        </Typography>
+                        <div style={{ width: 500 }}>
+                            <Autocomplete
+                                id="free-solo-demo"
+                                freeSolo
+                                options={[]}
+                                renderInput={(params) => (
+                                    <TextField {...params} onChange={handleSearch} label="Buscar por nome" margin="normal" variant="outlined"
+                                        size="small" />
+                                )}
+                            />
+                        </div>
+                    </>
                 )}
 
             {numSelected > 0 ? (
@@ -152,11 +172,6 @@ const EnhancedTableToolbar = (props) => {
             ) : (null)}
         </Toolbar>
     );
-    // <Tooltip title="Filtrar">
-    //     <IconButton aria-label="filter list">
-    //         <FilterListIcon />
-    //     </IconButton>
-    // </Tooltip>
 };
 
 EnhancedTableToolbar.propTypes = {
@@ -192,14 +207,18 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function DataTable(props) {
-    const { title, header, rows, onEditData } = props
+    const {
+        title, header, rows, onEditData,
+        onSearchData,
+        page, setPage,
+        rowsPerPage, setRowsPerPage,
+        countDataCollection
+    } = props
 
     const classes = useStyles();
     const [order, setOrder] = React.useState('asc');
-    const [orderBy, setOrderBy] = React.useState('calories');
+    const [orderBy, setOrderBy] = React.useState('prop');
     const [selected, setSelected] = React.useState([]);
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(5);
 
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -250,11 +269,11 @@ export default function DataTable(props) {
 
     const isSelected = (row) => selected.indexOf(row) !== -1;
 
-    const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
+    const emptyRows = rowsPerPage - Math.min(rowsPerPage, countDataCollection - page * rowsPerPage);
     return (
         <div className={classes.root}>
             <Paper className={classes.paper}>
-                <EnhancedTableToolbar title={title} numSelected={selected.length} />
+                <EnhancedTableToolbar title={title} onSearchData={onSearchData} numSelected={selected.length} />
                 <TableContainer>
                     <Table
                         className={classes.table}
@@ -273,7 +292,7 @@ export default function DataTable(props) {
                         />
                         <TableBody>
                             {stableSort(rows, getComparator(order, orderBy))
-                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                // .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((row, index) => {
                                     let firstHeader = 0
                                     const isItemSelected = isSelected(row);
@@ -295,6 +314,7 @@ export default function DataTable(props) {
                                                     inputProps={{ 'aria-labelledby': labelId }}
                                                 />
                                             </TableCell>
+
                                             {Object.entries(row).map(([key, value], i) => {
                                                 if (header.filter(elem => elem.id === key).length > 0) {
                                                     if (firstHeader === 0) {
@@ -336,7 +356,7 @@ export default function DataTable(props) {
                     rowsPerPageOptions={[5, 10, 25]}
                     labelRowsPerPage="Registros por página"
                     component="div"
-                    count={rows.length}
+                    count={countDataCollection}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     classes={{ spacer: classes.spacer }}
