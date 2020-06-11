@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { lighten, makeStyles } from '@material-ui/core/styles';
+import { lighten, makeStyles, withStyles } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -18,7 +18,6 @@ import IconButton from '@material-ui/core/IconButton';
 import Tooltip from '@material-ui/core/Tooltip';
 import DeleteIcon from '@material-ui/icons/Delete';
 
-import Autocomplete from '@material-ui/lab/Autocomplete';
 import TextField from '@material-ui/core/TextField'
 
 import DataTablePaginationActions from './DataTablePaginationActions'
@@ -122,21 +121,36 @@ const useToolbarStyles = makeStyles((theme) => ({
                 backgroundColor: theme.palette.secondary.dark,
             },
     title: {
-        flex: '1 0 50%',
+        flex: '1 1 10%',
     },
 }));
 
 const EnhancedTableToolbar = (props) => {
     const classes = useToolbarStyles();
-    const { title, selected, onSearchData, onDeleteData } = props;
+    const { title, selected, onSearchData, onDeleteData, setSelectedEmpty } = props;
 
     const handleSearch = e => {
         onSearchData(e)
     }
 
-    function handleDelete() {
-        onDeleteData(selected)
+    async function handleDelete() {
+        try {
+            await onDeleteData(selected)
+            setSelectedEmpty()
+        } catch (error) {
+            console.error(error)
+        }
     }
+
+    const HtmlTooltip = withStyles((theme) => ({
+        tooltip: {
+            backgroundColor: '#f5f5f9',
+            color: 'rgba(0, 0, 0, 0.87)',
+            maxWidth: 280,
+            fontSize: theme.typography.pxToRem(12),
+            border: '1px solid #dadde9',
+        },
+    }))(Tooltip);
 
     return (
         <Toolbar
@@ -154,25 +168,32 @@ const EnhancedTableToolbar = (props) => {
                             {title}
                         </Typography>
                         <div style={{ width: 500 }}>
-                            <Autocomplete
-                                id="free-solo-demo"
-                                freeSolo
-                                options={[]}
-                                renderInput={(params) => (
-                                    <TextField {...params} onChange={handleSearch} label="Buscar por nome" margin="normal" variant="outlined"
-                                        size="small" />
-                                )}
-                            />
+                            <TextField
+                                fullWidth
+                                onChange={handleSearch}
+                                label="Buscar por nome"
+                                margin="normal"
+                                variant="outlined"
+                                size="small" />
                         </div>
                     </>
                 )}
 
             {selected.length > 0 ? (
-                <Tooltip title="Remover">
+                <HtmlTooltip
+                    placement="left"
+                    title={
+                        <React.Fragment>
+                            <Typography color="inherit">
+                                Desejas remover {selected.length > 1 ? `esses ${selected.length} registros` : 'esse registro'}?
+                            </Typography>
+                        </React.Fragment>
+                    }
+                >
                     <IconButton aria-label="delete" onClick={() => handleDelete()}>
                         <DeleteIcon />
                     </IconButton>
-                </Tooltip>
+                </HtmlTooltip>
             ) : (null)}
         </Toolbar>
     );
@@ -240,6 +261,10 @@ export default function DataTable(props) {
         setSelected([]);
     };
 
+    const setSelectedEmpty = () => {
+        setSelected([]);
+    }
+
     const handleClick = (event, data) => {
         const selectedIndex = selected.indexOf(data);
         let newSelected = [];
@@ -282,7 +307,9 @@ export default function DataTable(props) {
                     title={title}
                     onSearchData={onSearchData}
                     onDeleteData={onDeleteData}
-                    selected={selected} />
+                    selected={selected}
+                    setSelectedEmpty={setSelectedEmpty}
+                />
                 <TableContainer>
                     <Table
                         className={classes.table}

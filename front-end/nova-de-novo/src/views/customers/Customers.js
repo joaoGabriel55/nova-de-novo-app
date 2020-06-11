@@ -3,7 +3,7 @@ import { formatDate, formatPhoneNumber } from '../../utils/FormatterUtil'
 import { snackbarService } from "uno-material-ui";
 import DataTable from '../../components/dataTable/DataTable'
 import CustomerDialog from './CustomerDialog'
-import CustomerRemoveDialog from './CustomerRemoveDialog'
+// import CustomerRemoveDialog from './CustomerRemoveDialog'
 
 import { getCustomers, getCustomersLike, deleteCustomer } from '../../services/CustomerService'
 
@@ -24,7 +24,7 @@ function Customers() {
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [countDataCollection, setCountDataCollection] = React.useState(0);
   const [searchName, setSearchName] = React.useState(null)
-  const [removableData, setRemovableData] = React.useState(null)
+  // const [removableData, setRemovableData] = React.useState(null)
 
   async function getCustomersAPI(rowsPerPage, page, name) {
     try {
@@ -58,7 +58,6 @@ function Customers() {
   }
 
   function onSearchData(data) {
-    console.log(data.target.value)
     if (data.target.value)
       setSearchName(data.target.value)
     else
@@ -69,17 +68,10 @@ function Customers() {
     setEditCustomer(data)
   }
 
-  function onDeleteDataDialog(data) {
-    if (removableData)
-      setRemovableData(null)
-    else
-      setRemovableData(data)
-  }
-
-  async function deleteCustomers() {
-    if (removableData) {
+  async function onDeleteData(data) {
+    if (data) {
       try {
-        for (const customer of removableData) {
+        for (const customer of data) {
           await deleteCustomer(customer.id)
         }
         snackbarService.showSnackbar('Cliente(s) removido(s) com sucesso!', 'success')
@@ -89,6 +81,20 @@ function Customers() {
       }
     }
   }
+
+  // async function deleteCustomers() {
+  //   if (removableData) {
+  //     try {
+  //       for (const customer of removableData) {
+  //         await deleteCustomer(customer.id)
+  //       }
+  //       snackbarService.showSnackbar('Cliente(s) removido(s) com sucesso!', 'success')
+  //       await onChangeData()
+  //     } catch (error) {
+  //       snackbarService.showSnackbar('Problema ao remover cliente(s)', 'error')
+  //     }
+  //   }
+  // }
 
   function onClearEditData() {
     setEditCustomer(null)
@@ -106,7 +112,7 @@ function Customers() {
       <DataTable title="Clientes"
         header={headCells}
         onSearchData={onSearchData}
-        onDeleteData={onDeleteDataDialog}
+        onDeleteData={onDeleteData}
         rows={customers}
         onEditData={onEditData}
         page={page}
@@ -116,11 +122,11 @@ function Customers() {
         countDataCollection={countDataCollection}
       />
       <CustomerDialog onChange={onChangeData} editData={editCustomer} onClearEditData={onClearEditData} />
-      <CustomerRemoveDialog
+      {/* <CustomerRemoveDialog
         deleteDataList={removableData}
         openDeleteDataDialog={onDeleteDataDialog}
         deleteData={deleteCustomers}
-      />
+      /> */}
     </>
   )
 }
