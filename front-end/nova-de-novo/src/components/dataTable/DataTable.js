@@ -128,21 +128,25 @@ const useToolbarStyles = makeStyles((theme) => ({
 
 const EnhancedTableToolbar = (props) => {
     const classes = useToolbarStyles();
-    const { title, numSelected, onSearchData } = props;
+    const { title, selected, onSearchData, onDeleteData } = props;
 
-    const handleSearch = async e => {
-        await onSearchData(e)
+    const handleSearch = e => {
+        onSearchData(e)
+    }
+
+    function handleDelete() {
+        onDeleteData(selected)
     }
 
     return (
         <Toolbar
             className={clsx(classes.root, {
-                [classes.highlight]: numSelected > 0,
+                [classes.highlight]: selected.length > 0,
             })}
         >
-            {numSelected > 0 ? (
+            {selected.length > 0 ? (
                 <Typography className={classes.title} color="inherit" variant="subtitle1" component="div">
-                    {numSelected} selecionados
+                    {selected.length} selecionados
                 </Typography>
             ) : (
                     <>
@@ -163,9 +167,9 @@ const EnhancedTableToolbar = (props) => {
                     </>
                 )}
 
-            {numSelected > 0 ? (
+            {selected.length > 0 ? (
                 <Tooltip title="Remover">
-                    <IconButton aria-label="delete">
+                    <IconButton aria-label="delete" onClick={() => handleDelete()}>
                         <DeleteIcon />
                     </IconButton>
                 </Tooltip>
@@ -176,7 +180,7 @@ const EnhancedTableToolbar = (props) => {
 
 EnhancedTableToolbar.propTypes = {
     title: PropTypes.string.isRequired,
-    numSelected: PropTypes.number.isRequired,
+    selected: PropTypes.object.isRequired,
 };
 
 const useStyles = makeStyles((theme) => ({
@@ -210,6 +214,7 @@ export default function DataTable(props) {
     const {
         title, header, rows, onEditData,
         onSearchData,
+        onDeleteData,
         page, setPage,
         rowsPerPage, setRowsPerPage,
         countDataCollection
@@ -273,7 +278,11 @@ export default function DataTable(props) {
     return (
         <div className={classes.root}>
             <Paper className={classes.paper}>
-                <EnhancedTableToolbar title={title} onSearchData={onSearchData} numSelected={selected.length} />
+                <EnhancedTableToolbar
+                    title={title}
+                    onSearchData={onSearchData}
+                    onDeleteData={onDeleteData}
+                    selected={selected} />
                 <TableContainer>
                     <Table
                         className={classes.table}

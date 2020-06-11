@@ -3,8 +3,9 @@ import { formatDate, formatPhoneNumber } from '../../utils/FormatterUtil'
 import { snackbarService } from "uno-material-ui";
 import DataTable from '../../components/dataTable/DataTable'
 import CustomerDialog from './CustomerDialog'
+import CustomerRemoveDialog from './CustomerRemoveDialog'
 
-import { getCustomers, getCustomersLike } from '../../services/CustomerService'
+import { getCustomers, getCustomersLike, deleteCustomer } from '../../services/CustomerService'
 
 const headCells = [
   { id: 'name', numeric: false, disablePadding: true, label: 'Nome' },
@@ -22,15 +23,16 @@ function Customers() {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [countDataCollection, setCountDataCollection] = React.useState(0);
-  // const [searchName, set] = React.useState(null)
+  const [searchName, setSearchName] = React.useState(null)
+  const [removableData, setRemovableData] = React.useState(null)
 
   async function getCustomersAPI(rowsPerPage, page, name) {
     try {
       let response = null
-      if (!name)
-        response = await getCustomers(rowsPerPage, page)
-      else
+      if (name)
         response = await getCustomersLike(rowsPerPage, page, name)
+      else
+        response = await getCustomers(rowsPerPage, page)
 
       for (let elem of response.data.rows) {
         if (elem['createdAt'])
@@ -55,13 +57,37 @@ function Customers() {
     await getCustomersAPI(rowsPerPage, page)
   }
 
-  async function onSearchData(data) {
+  function onSearchData(data) {
+    console.log(data.target.value)
     if (data.target.value)
-      await getCustomersAPI(rowsPerPage, page, data.target.value)
+      setSearchName(data.target.value)
+    else
+      setSearchName(null)
   }
 
   function onEditData(data) {
     setEditCustomer(data)
+  }
+
+  function onDeleteDataDialog(data) {
+    if (removableData)
+      setRemovableData(null)
+    else
+      setRemovableData(data)
+  }
+
+  async function deleteCustomers() {
+    if (removableData) {
+      try {
+        for (const customer of removableData) {
+          await deleteCustomer(customer.id)
+        }
+        snackbarService.showSnackbar('Cliente(s) removido(s) com sucesso!', 'success')
+        await onChangeData()
+      } catch (error) {
+        snackbarService.showSnackbar('Problema ao remover cliente(s)', 'error')
+      }
+    }
   }
 
   function onClearEditData() {
@@ -69,17 +95,18 @@ function Customers() {
   }
 
   React.useEffect(() => {
-    async function loadCustomers(rowsPerPage, page) {
-      await getCustomersAPI(rowsPerPage, page)
+    async function loadCustomers(rowsPerPage, page, searchName) {
+      await getCustomersAPI(rowsPerPage, page, searchName)
     }
-    loadCustomers(rowsPerPage, page)
-  }, [rowsPerPage, page, countDataCollection])
+    loadCustomers(rowsPerPage, page, searchName)
+  }, [rowsPerPage, page, countDataCollection, searchName])
 
   return (
     <>
       <DataTable title="Clientes"
         header={headCells}
         onSearchData={onSearchData}
+        onDeleteData={onDeleteDataDialog}
         rows={customers}
         onEditData={onEditData}
         page={page}
@@ -89,6 +116,11 @@ function Customers() {
         countDataCollection={countDataCollection}
       />
       <CustomerDialog onChange={onChangeData} editData={editCustomer} onClearEditData={onClearEditData} />
+      <CustomerRemoveDialog
+        deleteDataList={removableData}
+        openDeleteDataDialog={onDeleteDataDialog}
+        deleteData={deleteCustomers}
+      />
     </>
   )
 }
