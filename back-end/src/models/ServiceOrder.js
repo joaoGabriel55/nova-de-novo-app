@@ -28,8 +28,15 @@ const serviceOrder = (sequelize, DataTypes) => {
                 notEmpty: true,
             }
         },
-        status: {
+        statusService: {
             type: DataTypes.STRING, // FINISHED or PENDING
+            allowNull: false,
+            validate: {
+                notEmpty: true,
+            }
+        },
+        statusPayment: {
+            type: DataTypes.STRING, // PAID OR NOT PAID
             allowNull: false,
             validate: {
                 notEmpty: true,
