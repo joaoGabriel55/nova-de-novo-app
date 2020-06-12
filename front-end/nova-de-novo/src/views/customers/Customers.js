@@ -3,7 +3,6 @@ import { formatDate, formatPhoneNumber } from '../../utils/FormatterUtil'
 import { snackbarService } from "uno-material-ui";
 import DataTable from '../../components/dataTable/DataTable'
 import CustomerDialog from './CustomerDialog'
-// import CustomerRemoveDialog from './CustomerRemoveDialog'
 
 import { getCustomers, getCustomersLike, deleteCustomer } from '../../services/CustomerService'
 
@@ -24,7 +23,6 @@ function Customers() {
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [countDataCollection, setCountDataCollection] = React.useState(0);
   const [searchName, setSearchName] = React.useState(null)
-  // const [removableData, setRemovableData] = React.useState(null)
 
   async function getCustomersAPI(rowsPerPage, page, name) {
     try {
@@ -36,9 +34,9 @@ function Customers() {
 
       for (let elem of response.data.rows) {
         if (elem['createdAt'])
-          elem['createdAt'] = formatDate(elem['createdAt'])
+          elem['createdAt'] = formatDate(elem['createdAt'], true)
         if (elem['updatedAt'])
-          elem['updatedAt'] = formatDate(elem['updatedAt'])
+          elem['updatedAt'] = formatDate(elem['updatedAt'], true)
         if (elem['phone'])
           elem['phone'] = formatPhoneNumber(elem['phone'])
       }
@@ -82,20 +80,6 @@ function Customers() {
     }
   }
 
-  // async function deleteCustomers() {
-  //   if (removableData) {
-  //     try {
-  //       for (const customer of removableData) {
-  //         await deleteCustomer(customer.id)
-  //       }
-  //       snackbarService.showSnackbar('Cliente(s) removido(s) com sucesso!', 'success')
-  //       await onChangeData()
-  //     } catch (error) {
-  //       snackbarService.showSnackbar('Problema ao remover cliente(s)', 'error')
-  //     }
-  //   }
-  // }
-
   function onClearEditData() {
     setEditCustomer(null)
   }
@@ -122,11 +106,6 @@ function Customers() {
         countDataCollection={countDataCollection}
       />
       <CustomerDialog onChange={onChangeData} editData={editCustomer} onClearEditData={onClearEditData} />
-      {/* <CustomerRemoveDialog
-        deleteDataList={removableData}
-        openDeleteDataDialog={onDeleteDataDialog}
-        deleteData={deleteCustomers}
-      /> */}
     </>
   )
 }

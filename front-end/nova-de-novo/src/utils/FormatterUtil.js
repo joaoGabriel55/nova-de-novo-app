@@ -1,7 +1,7 @@
 import moment from 'moment'
 
-export const formatDate = (date) => {
-    return moment(date).format("DD/MM/YYYY hh:mm")
+export const formatDate = (date, withHoursAndMinutes) => {
+    return moment(date).format(`DD/MM/YYYY ${withHoursAndMinutes ? 'hh:mm' : ''}`)
 }
 
 export const formatPhoneNumber = (phoneNumberString) => {

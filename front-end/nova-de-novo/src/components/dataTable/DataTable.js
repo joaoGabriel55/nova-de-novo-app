@@ -167,7 +167,7 @@ const EnhancedTableToolbar = (props) => {
                         <Typography className={classes.title} variant="h6" id="tableTitle" component="div">
                             {title}
                         </Typography>
-                        <div style={{ width: 500 }}>
+                        <div style={{ width: 500, display: onSearchData ? '' : 'none' }}>
                             <TextField
                                 fullWidth
                                 onChange={handleSearch}
@@ -371,11 +371,13 @@ export default function DataTable(props) {
                                                 return null;
                                             })}
                                             <TableCell padding="checkbox">
-                                                <IconButton
-                                                    aria-label="edit"
-                                                    onClick={() => handleEditClick(row)}>
-                                                    <Edit />
-                                                </IconButton>
+                                                <Tooltip title="Atualizar" arrow>
+                                                    <IconButton
+                                                        aria-label="edit"
+                                                        onClick={() => handleEditClick(row)}>
+                                                        <Edit />
+                                                    </IconButton>
+                                                </Tooltip>
                                             </TableCell>
                                         </TableRow>
                                     );
