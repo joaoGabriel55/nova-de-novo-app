@@ -17,8 +17,9 @@ import Checkbox from '@material-ui/core/Checkbox';
 import IconButton from '@material-ui/core/IconButton';
 import Tooltip from '@material-ui/core/Tooltip';
 import DeleteIcon from '@material-ui/icons/Delete';
+import { formatDate } from '../../utils/FormatterUtil'
 
-import TextField from '@material-ui/core/TextField'
+import SearchBar from '../SearchBar'
 
 import DataTablePaginationActions from './DataTablePaginationActions'
 import { Edit } from '@material-ui/icons';
@@ -168,13 +169,7 @@ const EnhancedTableToolbar = (props) => {
                             {title}
                         </Typography>
                         <div style={{ width: 500, display: onSearchData ? '' : 'none' }}>
-                            <TextField
-                                fullWidth
-                                onChange={handleSearch}
-                                label="Buscar por nome"
-                                margin="normal"
-                                variant="outlined"
-                                size="small" />
+                            <SearchBar handleSearch={handleSearch} placeholder={'Buscar por nome'} />
                         </div>
                     </>
                 )}

@@ -2,14 +2,14 @@ import React from 'react';
 import { formatDate, formatPhoneNumber } from '../../utils/FormatterUtil'
 import { snackbarService } from "uno-material-ui";
 import DataTable from '../../components/dataTable/DataTable'
-// import DressmakerDialog from './DressmakerDialog'
+import DressmakerDialog from './DressmakerDialog'
 
-import { getDressmakers } from '../../services/DressmakerService'
+import { getDressmakers, deleteDressmaker } from '../../services/DressmakerService'
 
 const headCells = [
   { id: 'name', numeric: false, disablePadding: true, label: 'Nome' },
-  { id: 'phone', numeric: true, disablePadding: false, label: 'Telefone' },
   { id: 'address', numeric: true, disablePadding: false, label: 'Endereço' },
+  { id: 'phone', numeric: true, disablePadding: false, label: 'Telefone' },
   { id: 'contract', numeric: true, disablePadding: false, label: 'Tipo de contrato' },
   { id: 'admission', numeric: true, disablePadding: false, label: 'Data de admissão', momentFormat: 'DD/MM/YYYY' },
 ];
@@ -53,8 +53,8 @@ function Dressmakers() {
   async function onDeleteData(data) {
     if (data) {
       try {
-        for (const customer of data) {
-          // await deleteCustomer(customer.id)
+        for (const dressmakers of data) {
+          await deleteDressmaker(dressmakers.id)
         }
         snackbarService.showSnackbar('Costureira(s) removida(s) com sucesso!', 'success')
         await onChangeData()
@@ -64,9 +64,9 @@ function Dressmakers() {
     }
   }
 
-  // function onClearEditData() {
-  //   setEditDressmaker(null)
-  // }
+  function onClearEditData() {
+    setEditDressmaker(null)
+  }
 
   React.useEffect(() => {
     async function loadDressmakers(rowsPerPage, page) {
@@ -88,6 +88,7 @@ function Dressmakers() {
         onEditData={onEditData}
         onDeleteData={onDeleteData}
       />
+      <DressmakerDialog onChange={onChangeData} editData={editDressmaker} onClearEditData={onClearEditData} />
     </>
   )
 }
