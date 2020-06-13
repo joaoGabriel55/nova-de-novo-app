@@ -17,8 +17,9 @@ import Checkbox from '@material-ui/core/Checkbox';
 import IconButton from '@material-ui/core/IconButton';
 import Tooltip from '@material-ui/core/Tooltip';
 import DeleteIcon from '@material-ui/icons/Delete';
+import { formatDate } from '../../utils/FormatterUtil'
 
-import TextField from '@material-ui/core/TextField'
+import SearchBar from '../SearchBar'
 
 import DataTablePaginationActions from './DataTablePaginationActions'
 import { Edit } from '@material-ui/icons';
@@ -167,14 +168,8 @@ const EnhancedTableToolbar = (props) => {
                         <Typography className={classes.title} variant="h6" id="tableTitle" component="div">
                             {title}
                         </Typography>
-                        <div style={{ width: 500 }}>
-                            <TextField
-                                fullWidth
-                                onChange={handleSearch}
-                                label="Buscar por nome"
-                                margin="normal"
-                                variant="outlined"
-                                size="small" />
+                        <div style={{ width: 500, display: onSearchData ? '' : 'none' }}>
+                            <SearchBar handleSearch={handleSearch} placeholder={'Buscar por nome'} />
                         </div>
                     </>
                 )}
@@ -371,11 +366,13 @@ export default function DataTable(props) {
                                                 return null;
                                             })}
                                             <TableCell padding="checkbox">
-                                                <IconButton
-                                                    aria-label="edit"
-                                                    onClick={() => handleEditClick(row)}>
-                                                    <Edit />
-                                                </IconButton>
+                                                <Tooltip title="Atualizar" arrow>
+                                                    <IconButton
+                                                        aria-label="edit"
+                                                        onClick={() => handleEditClick(row)}>
+                                                        <Edit />
+                                                    </IconButton>
+                                                </Tooltip>
                                             </TableCell>
                                         </TableRow>
                                     );

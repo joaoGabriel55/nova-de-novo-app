@@ -1,5 +1,5 @@
 import models, { sequelize } from '../models';
-import { validateEmail, validatePhone } from '../utils/validatorUtils'
+import { validatePhone } from '../utils/validatorUtils'
 import { Exception } from '../exceptions/responseException'
 
 
@@ -16,15 +16,8 @@ const validateDressmaker = (res, dressmaker) => {
     if (!dressmaker.phone || dressmaker.phone === '')
         return Exception(res, 400, 'Phone is required')
 
-
     if (!validatePhone(dressmaker.phone))
         return Exception(res, 400, 'Phone is not valid')
-
-    if (!dressmaker.email || dressmaker.email === '')
-        return Exception(res, 400, 'Email is required')
-
-    if (!validateEmail(dressmaker.email))
-        return Exception(res, 400, 'Email is not valid')
 
     if (!dressmaker.address || dressmaker.address === '')
         return Exception(res, 400, 'Address is required')
@@ -34,6 +27,9 @@ const validateDressmaker = (res, dressmaker) => {
 
     if (!(dressmaker.contract.toUpperCase() === contractType.pj) && !(dressmaker.contract.toUpperCase() === contractType.clt))
         return Exception(res, 400, 'Contract type is must be \'CLT\' or \'PJ\'')
+
+    if (!dressmaker.admission || dressmaker.admission === '')
+        return Exception(res, 400, 'Admission date is required')
 }
 
 const index = async (req, res) => {
@@ -82,9 +78,9 @@ const findById = async (req, res) => {
 }
 
 const store = async (req, res) => {
-    const { name, phone, email, address, contract } = req.body
+    const { name, phone, address, contract, admission } = req.body
     const dressmaker = {
-        name, phone, email, address, contract, admission: new Date(), active: true
+        name, phone, address, contract, admission, active: true
     }
 
     const error = validateDressmaker(res, dressmaker)
@@ -100,9 +96,9 @@ const store = async (req, res) => {
 }
 
 const update = async (req, res) => {
-    const { id, name, phone, email, address, contract } = req.body
+    const { id, name, phone, address, contract, admission } = req.body
     const dressmaker = {
-        id, name, phone, email, address, contract
+        id, name, phone, address, contract, admission
     }
     const idRequest = req.params.id
 
