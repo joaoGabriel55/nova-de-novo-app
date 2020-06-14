@@ -1,11 +1,16 @@
 import React from 'react';
-import { Switch, Redirect } from 'react-router-dom';
+
+import { tokenDecoder } from './utils/TokenDecoder'
+
+import { Switch, Redirect, useHistory } from 'react-router-dom';
 
 import { AuthContext } from './auth/context/AuthContextProvider';
 
 import RouteWithLayout from './components/RouterWithLayout';
+
 import Main from './layouts/template/Main';
 
+import SimpleLayout from './layouts/template/SimpleLayout'
 import SignIn from './auth/views/SignIn'
 
 import { getUserByUsername } from './services/UserService'
@@ -30,7 +35,7 @@ const SignInRouter = () => {
             <RouteWithLayout
                 component={SignIn}
                 exact
-                layout={Main}
+                layout={SimpleLayout}
                 path="/sign-in"
             />
         </>
@@ -39,19 +44,14 @@ const SignInRouter = () => {
 
 const Routes = () => {
     const [userLogged, setUserLogged] = React.useContext(AuthContext);
-    console.log(window.location.href.includes('sign-in'))
+    const history = useHistory()
+
     async function userTokenValidation() {
 
         const token = localStorage.getItem('accessToken')
         if (token) {
             try {
-                var base64Url = token.split('.')[1];
-                var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                var jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-
-                const userToken = JSON.parse(jsonPayload)
+                const userToken = tokenDecoder(token)
                 const user = await getUserByUsername(userToken.username)
 
                 if (!userLogged)
@@ -61,6 +61,8 @@ const Routes = () => {
             } catch (error) {
                 return false
             }
+        } else if (!localStorage.getItem('accessToken') && !localStorage.getItem('refreshToken')) {
+            history.replace('/sign-in')
         }
     }
 
@@ -81,7 +83,7 @@ const Routes = () => {
             <RouteWithLayout
                 component={SignIn}
                 exact
-                layout={Main}
+                layout={SimpleLayout}
                 path="/sign-in"
             />
             <RouteWithLayout

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { AuthContext } from "../../auth/context/AuthContextProvider";
+// import { AuthContext } from "../../auth/context/AuthContextProvider";
 
 import { makeStyles } from '@material-ui/core/styles';
 
@@ -13,10 +13,9 @@ export const drawerWidth = 258;
 
 export default function Main(props) {
     const { children } = props;
-    const actualPathName = children.props
 
     const classes = useStyles();
-    const [userLogged] = React.useContext(AuthContext);
+    // const [userLogged] = React.useContext(AuthContext);
 
     const [open, setOpen] = React.useState(true);
 
@@ -28,30 +27,27 @@ export default function Main(props) {
         setOpen(false);
     }
 
-    const isValidActualPath = () => {
-        if (userLogged &&
-            localStorage.getItem('accessToken') &&
-            localStorage.getItem('refreshToken')) {
-            return true
-        }
-        return false
-    }
+    // const isValidActualPath = () => {
+    //     if (userLogged &&
+    //         localStorage.getItem('accessToken') &&
+    //         localStorage.getItem('refreshToken')) {
+    //         return true
+    //     }
+    //     return false
+    // }
 
     return (
         <div className={classes.root}>
-            {isValidActualPath() ?
-                (
-                    <>
-                        <ToolbarApp open={open} handleDrawerOpen={handleDrawerOpen} />
-                        <NavDrawer open={open} handleDrawerClose={handleDrawerClose} />
-                        <main className={classes.content}>
-                            <div className={classes.appBarSpacer} />
-                            <Container maxWidth="lg" className={classes.container}>
-                                {children}
-                            </Container>
-                        </main>
-                    </>
-                ) : children}
+            <>
+                <ToolbarApp open={open} handleDrawerOpen={handleDrawerOpen} />
+                <NavDrawer open={open} handleDrawerClose={handleDrawerClose} />
+                <main className={classes.content}>
+                    <div className={classes.appBarSpacer} />
+                    <Container maxWidth="lg" className={classes.container}>
+                        {children}
+                    </Container>
+                </main>
+            </>
         </div >
     )
 }
