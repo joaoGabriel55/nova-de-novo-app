@@ -1,6 +1,8 @@
 import React from 'react';
-import clsx from 'clsx';
+import { useHistory } from "react-router-dom";
+import { AuthContext } from "../../auth/context/AuthContextProvider";
 
+import clsx from 'clsx';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
@@ -17,6 +19,17 @@ import theme from '../../theme';
 
 export default function ToolbarApp(props) {
     const classes = useStyles();
+    const history = useHistory();
+
+    const [userLogged, setUserLogged] = React.useContext(AuthContext);
+
+    function logout() {
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+        if(userLogged)
+            setUserLogged(null)
+        history.replace('/sign-in')
+    }
 
     const { handleDrawerOpen, open } = props
     return (
@@ -34,7 +47,7 @@ export default function ToolbarApp(props) {
                 <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
                     <span style={{ color: theme.palette.secondary.main }}>Nova de Novo</span>
                 </Typography>
-                <IconButton color="inherit">
+                <IconButton color="inherit" onClick={() => logout()}>
                     <Tooltip title="Sair" aria-label="exit">
                         <ExitToAppIcon color="secondary" />
                     </Tooltip>

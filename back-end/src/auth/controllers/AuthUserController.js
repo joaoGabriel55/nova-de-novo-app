@@ -9,7 +9,7 @@ dotenv.config();
 let refreshTokens = []
 
 const generateAccessToken = (user) => {
-    return jwt.sign(user, process.env.TOKEN_SECRET, { expiresIn: '1800s' })
+    return jwt.sign(user, process.env.TOKEN_SECRET, { expiresIn: '30s' })
 }
 
 const loginUser = async (req, res) => {
@@ -26,8 +26,8 @@ const loginUser = async (req, res) => {
     if (!bcrypt.compareSync(password, passwordHash))
         return Exception(res, 400, `Wrong password!`)
 
-    const accessToken = generateAccessToken({ username, password })
-    const refreshToken = jwt.sign({ username, password }, process.env.REFRESH_TOKEN_SECRET)
+    const accessToken = generateAccessToken({ username })
+    const refreshToken = jwt.sign({ username }, process.env.REFRESH_TOKEN_SECRET)
     refreshTokens.push(refreshToken)
 
     return res.status(200).json({ accessToken, refreshToken })

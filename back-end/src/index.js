@@ -29,25 +29,31 @@ app.use('/auth', authRoutes.authentication)
 app.use('/users', authenticateToken, routes.user)
 
 //TODO AUTH
-app.use('/customers', routes.customer)
-app.use('/dressmakers', routes.dressmaker)
-app.use('/services', routes.service)
-app.use('/service-types', routes.serviceType)
-app.use('/service-orders', routes.serviceOrder)
+app.use('/customers', authenticateToken, routes.customer)
+app.use('/dressmakers', authenticateToken, routes.dressmaker)
+app.use('/services', authenticateToken, routes.service)
+app.use('/service-types', authenticateToken, routes.serviceType)
+app.use('/service-orders', authenticateToken, routes.serviceOrder)
 
 function authenticateToken(req, res, next) {
     // Gather the jwt access token from the request header
-    const authHeader = req.headers['authorization']
+    const auth = process.env.USE_AUTH
+    if (auth !== 'false') {    
+        const authHeader = req.headers['authorization']
 
-    const token = authHeader && authHeader.split(' ')[1]
-    if (token == null) return Exception(res, 401, `Token is empty`)
+        const token = authHeader && authHeader.split(' ')[1]
+        if (token == null) return Exception(res, 401, `Token is empty`)
 
-    jwt.verify(token, process.env.TOKEN_SECRET, (err, user) => {
-        console.log(err)
-        if (err) return Exception(res, 403, `Invalid Token`)
-        req.user = user
-        next() // pass the execution off to whatever request the client intended
-    })
+        jwt.verify(token, process.env.TOKEN_SECRET, (err, user) => {
+            console.log(err)
+            if (err) return Exception(res, 403, `Invalid Token`)
+            req.user = user
+            next() // pass the execution off to whatever request the client intended
+        })
+    } else {
+        next()
+    }
+    
 }
 
 const eraseDatabaseOnSync = false;

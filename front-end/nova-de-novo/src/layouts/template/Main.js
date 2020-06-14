@@ -1,5 +1,7 @@
 import React from 'react';
-// import clsx from 'clsx';
+
+import { AuthContext } from "../../auth/context/AuthContextProvider";
+
 import { makeStyles } from '@material-ui/core/styles';
 
 import ToolbarApp from './ToolbarApp';
@@ -11,28 +13,45 @@ export const drawerWidth = 258;
 
 export default function Main(props) {
     const { children } = props;
-    
+    const actualPathName = children.props
+
     const classes = useStyles();
+    const [userLogged] = React.useContext(AuthContext);
+
     const [open, setOpen] = React.useState(true);
+
     const handleDrawerOpen = () => {
         setOpen(true);
-    };
+    }
+
     const handleDrawerClose = () => {
         setOpen(false);
-    };
-    // const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
+    }
+
+    const isValidActualPath = () => {
+        if (userLogged &&
+            localStorage.getItem('accessToken') &&
+            localStorage.getItem('refreshToken')) {
+            return true
+        }
+        return false
+    }
 
     return (
         <div className={classes.root}>
-
-            <ToolbarApp open={open} handleDrawerOpen={handleDrawerOpen} />
-            <NavDrawer open={open} handleDrawerClose={handleDrawerClose} />
-            <main className={classes.content}>
-                <div className={classes.appBarSpacer} />
-                <Container maxWidth="lg" className={classes.container}>
-                    {children}
-                </Container>
-            </main>
+            {isValidActualPath() ?
+                (
+                    <>
+                        <ToolbarApp open={open} handleDrawerOpen={handleDrawerOpen} />
+                        <NavDrawer open={open} handleDrawerClose={handleDrawerClose} />
+                        <main className={classes.content}>
+                            <div className={classes.appBarSpacer} />
+                            <Container maxWidth="lg" className={classes.container}>
+                                {children}
+                            </Container>
+                        </main>
+                    </>
+                ) : children}
         </div >
     )
 }

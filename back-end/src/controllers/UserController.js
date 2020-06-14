@@ -6,7 +6,16 @@ const salt = 10
 // index, show, store, update, destroy
 
 const index = async (req, res) => {
-    return res.json('USER')
+}
+
+const findByUsername = async (req, res) => {
+    const username = req.params.username
+    let user = await models.User.findByLogin(username)
+    
+    if (!user)
+        return Exception(res, 400, `User '${username}' not found`)
+    
+    return res.status(200).json({ username: user.username })
 }
 
 const store = async (req, res) => {
@@ -27,4 +36,4 @@ const update = async (req, res) => {
 const destroy = async (req, res) => {
 }
 
-export default { index, store, update, destroy }
+export default { index, findByUsername, store, update, destroy }
