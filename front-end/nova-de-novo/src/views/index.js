@@ -3,4 +3,5 @@ export { default as ServiceOrder } from './ServiceOrder';
 export { default as ProductionMap } from './ProductionMap';
 export { default as Customers } from './customers/Customers';
 export { default as Dressmakers } from './dressmakers/Dressmakers';
+export { default as Users } from './Users';
 export { default as Finances } from './Finances';

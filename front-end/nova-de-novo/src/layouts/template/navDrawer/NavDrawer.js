@@ -14,7 +14,7 @@ import { drawerWidth } from "../Main";
 import ListItems from './ListItems'
 
 import {
-    Home, Receipt, MonetizationOn, Assignment, Contacts, SupervisedUserCircle
+    Home, Receipt, MonetizationOn, Assignment, Contacts, SupervisedUserCircle, PersonAdd
 } from '@material-ui/icons'
 
 const pages = [
@@ -42,6 +42,11 @@ const pages = [
         title: 'Costureiras',
         href: '/costureiras',
         icon: <SupervisedUserCircle />
+    },
+    {
+        title: 'Usuários',
+        href: '/usuarios',
+        icon: <PersonAdd />
     },
     {
         title: 'Finanças',

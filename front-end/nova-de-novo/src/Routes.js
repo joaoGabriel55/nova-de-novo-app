@@ -21,6 +21,7 @@ import {
     ProductionMap,
     Customers,
     Dressmakers,
+    Users,
     Finances
 } from './views'
 
@@ -115,6 +116,12 @@ const Routes = () => {
                 exact
                 layout={Main}
                 path="/costureiras"
+            />
+            <RouteWithLayout
+                component={Users}
+                exact
+                layout={Main}
+                path="/usuarios"
             />
             <RouteWithLayout
                 component={Finances}
