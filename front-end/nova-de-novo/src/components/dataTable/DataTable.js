@@ -17,7 +17,6 @@ import Checkbox from '@material-ui/core/Checkbox';
 import IconButton from '@material-ui/core/IconButton';
 import Tooltip from '@material-ui/core/Tooltip';
 import DeleteIcon from '@material-ui/icons/Delete';
-import { formatDate } from '../../utils/FormatterUtil'
 
 import SearchBar from '../SearchBar'
 
