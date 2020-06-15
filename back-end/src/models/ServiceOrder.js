@@ -36,7 +36,7 @@ const serviceOrder = (sequelize, DataTypes) => {
             }
         },
         statusPayment: {
-            type: DataTypes.STRING, // PAID OR NOT PAID
+            type: DataTypes.BOOLEAN, // PAID OR NOT PAID
             allowNull: false,
             validate: {
                 notEmpty: true,

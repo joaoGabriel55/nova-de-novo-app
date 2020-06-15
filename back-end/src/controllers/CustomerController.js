@@ -2,7 +2,6 @@ import models, { sequelize } from '../models';
 import { validateEmail, validatePhone } from '../utils/validatorUtils'
 import { Exception } from '../exceptions/responseException'
 const Sequelize = require('sequelize');
-const Op = Sequelize.Op;
 
 const validateCustomer = (res, customer) => {
 

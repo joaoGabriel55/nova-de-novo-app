@@ -31,10 +31,14 @@ const validateServiceOrder = (res, service) => {
     if (!(service.deliveryPeriod.toUpperCase() === 'T') && !(service.deliveryPeriod.toUpperCase() === 'M'))
         return Exception(res, 400, 'Delivery period must be \'T\' or \'M\'')
 
-    if (!service.status || service.status === '')
-        return Exception(res, 400, 'Status is required')
-    if (!validateStatus(service.status))
-        return Exception(res, 400, 'Status must be \'FINISHED\' or \'PENDING\'')
+    if (service.id) {
+        if (!service.statusService || service.statusService === '')
+            return Exception(res, 400, 'Status service is required')
+        if (!validateStatus(service.status))
+            return Exception(res, 400, 'Status service must be \'FINISHED\' or \'PENDING\'')
+        if (!service.statusPayment || service.statusPayment === '')
+            return Exception(res, 400, 'Status payment is required')
+    }
 
     if (!service.customerId || service.customerId === '')
         return Exception(res, 400, 'Customer ID is required')
@@ -325,9 +329,13 @@ const findByIdAndCustomerAndDressmakerId = async (req, res) => {
 }
 
 const store = async (req, res) => {
-    const { deliveryDate, deliveryPeriod, totalPrice, status, customerId, dressmakerId } = req.body
+    const { deliveryDate, deliveryPeriod, totalPrice, customerId, dressmakerId } = req.body
     const entryDate = new Date()
-    const serviceOrder = { deliveryDate, entryDate, deliveryPeriod, totalPrice, status, customerId, dressmakerId }
+    const serviceOrder = {
+        deliveryDate, entryDate, deliveryPeriod, totalPrice,
+        statusService: 'PENDING', statusPayment: false,
+        customerId, dressmakerId
+    }
 
     const error = validateServiceOrder(res, serviceOrder)
     if (error)
@@ -342,7 +350,9 @@ const store = async (req, res) => {
 }
 
 const update = async (req, res) => {
-    const { id, deliveryDate, deliveryPeriod, totalPrice, status, customerId, dressmakerId } = req.body
+    const {
+        id, deliveryDate, deliveryPeriod, totalPrice, statusService, statusPayment, customerId, dressmakerId
+    } = req.body
     const idRequest = req.params.id
 
     console.log(idRequest, id)
@@ -350,10 +360,12 @@ const update = async (req, res) => {
     if (parseInt(idRequest) !== id)
         return Exception(res, 400, 'Path ID and payload ID does not matches')
 
-    const service = { id, deliveryDate, deliveryPeriod, totalPrice, status, customerId, dressmakerId }
-
     if (!await models.ServiceOrder.findOne({ where: { id: id } }))
         return Exception(res, 404, 'Service Order not found')
+
+    const service = {
+        id, deliveryDate, deliveryPeriod, totalPrice, statusService, statusPayment, customerId, dressmakerId
+    }
 
     const error = validateServiceOrder(res, service)
     if (error)
