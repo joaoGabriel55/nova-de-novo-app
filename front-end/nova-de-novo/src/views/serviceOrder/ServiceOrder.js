@@ -15,6 +15,8 @@ import ListSubheader from '@material-ui/core/ListSubheader';
 import ListItemText from '@material-ui/core/ListItemText';
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Clear';
+import AddIcon from '@material-ui/icons/Add';
+import Tooltip from '@material-ui/core/Tooltip';
 
 import 'date-fns';
 import DateFnsUtils from '@date-io/date-fns';
@@ -26,8 +28,57 @@ import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 
+import { ServiceOrderModel, ServiceModel } from '../../models/ServiceOrderModel'
+
 function ServiceOrder() {
   const classes = useStyles();
+
+  const [serviceOrder, setServiceOrder] = React.useState(new ServiceOrderModel());
+  const [service, setService] = React.useState(new ServiceModel());
+  const [services, setServices] = React.useState([]);
+  const [entryDate, setEntryDate] = React.useState(new Date())
+  const [deliveryDate, setDeliveryDate] = React.useState(new Date())
+
+  const updateServiceField = e => {
+    setService({
+      ...service,
+      [e.target.name]: e.target.value
+    })
+  }
+
+  const handleEntryDateChange = (date) => {
+    setEntryDate(date);
+    serviceOrder({
+      ...serviceOrder,
+      entryDate: date
+    })
+  };
+
+  const handleDeliveryDateChange = (date) => {
+    setDeliveryDate(date);
+    serviceOrder({
+      ...serviceOrder,
+      deliveryDate: date
+    })
+  };
+
+  const onAddService = () => {
+    if (service) {
+      service.price = parseFloat(service.price)
+      const serviceAdd = service
+      setServices([...services, serviceAdd])
+      setService({
+        ...service
+      })
+    }
+  }
+
+  function onRemoveService(indexService) {
+    const newServices = services.filter((elem) => services.indexOf(elem) !== indexService);
+    console.log(newServices)
+    setServices(newServices);
+  }
+
   return (
     <Card className={classes.root}>
       <CardContent>
@@ -53,7 +104,7 @@ function ServiceOrder() {
                 </Typography>
               </ListSubheader>
             }>
-            {[0, 1, 2, 3].map((value) => {
+            {services.map((value) => {
               const labelId = `checkbox-list-secondary-label-${value}`;
               return (
                 <>
@@ -65,15 +116,15 @@ function ServiceOrder() {
                         marginRight: 18
                       }}>
                         <div>
-                          {`Line item ${value + 1}`}
+                          {value.name}
                         </div>
                         <div style={{ marginRight: 18 }}>
-                          R$ 49.99
+                          R$ {value.price}
                         </div>
                       </div>
                     </ListItemText>
                     <ListItemSecondaryAction>
-                      <IconButton aria-label="delete">
+                      <IconButton onClick={() => onRemoveService(services.indexOf(value))} aria-label="delete">
                         <DeleteIcon />
                       </IconButton>
                     </ListItemSecondaryAction>
@@ -83,15 +134,33 @@ function ServiceOrder() {
               );
             })}
           </List>
-          <div style={{
-            display: 'flex', flexDirection: 'row',
-            justifyContent: 'space-between', alignItems: 'center',
-            marginTop: 8,
-            marginRight: 8
-          }}>
-            <Button
-              variant="outlined" disableElevation color="secondary" size="normal"
-            >Adicionar serviço</Button>
+          <div className={classes.inlineFlexRow}>
+            <TextField
+              color="secondary"
+              value={service.name}
+              onChange={updateServiceField}
+              id="name"
+              name="name"
+              fullWidth label="Nome do serviço" variant="outlined" size="small" />
+            <div style={{ width: 9 }}></div>
+            <TextField
+              value={service.price}
+              onChange={updateServiceField}
+              id="price"
+              name="price"
+              color="secondary" label="Preço" variant="outlined" size="small" />
+            <div style={{ width: 9 }}></div>
+            <Tooltip title="Adicionar serviço" aria-label="add">
+              <IconButton aria-label="add" color='secondary' onClick={() => onAddService()}>
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
+            <div style={{ width: 9 }}></div>
+          </div>
+          <br></br>
+          <Divider />
+          <div className={classes.inlineFlexRow}>
+            <div></div>
             <Typography variant="body1">
               <span><b>Total: </b>R$ 49.99</span>
             </Typography>
@@ -110,11 +179,13 @@ function ServiceOrder() {
                 inputVariant="outlined"
                 format="dd/MM/yyyy"
                 margin="normal"
-                id="admission"
-                name="admission"
+                id="entryDate"
+                name="entryDate"
                 label="Data de entrada"
                 invalidDateMessage="Formato da data inválido"
                 size="small"
+                value={entryDate}
+                onChange={handleEntryDateChange}
                 KeyboardButtonProps={{
                   'aria-label': 'change date',
                 }}
@@ -131,11 +202,13 @@ function ServiceOrder() {
                 inputVariant="outlined"
                 format="dd/MM/yyyy"
                 margin="normal"
-                id="admission"
-                name="admission"
+                id="deliveryDate"
+                name="deliveryDate"
                 label="Data de entrega"
                 invalidDateMessage="Formato da data inválido"
                 size="small"
+                value={deliveryDate}
+                onChange={handleDeliveryDateChange}
                 KeyboardButtonProps={{
                   'aria-label': 'change date',
                 }}
@@ -197,6 +270,12 @@ const useStyles = makeStyles((theme) => ({
   formControl: {
     marginTop: theme.spacing(2),
     marginLeft: theme.spacing(1)
+  },
+  inlineFlexRow: {
+    display: 'flex', flexDirection: 'row',
+    justifyContent: 'space-between', alignItems: 'center',
+    marginTop: 8,
+    marginRight: 8
   },
   pos: {
     marginBottom: 12,
