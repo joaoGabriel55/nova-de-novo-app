@@ -30,6 +30,14 @@ import MenuItem from '@material-ui/core/MenuItem';
 
 import { ServiceOrderModel, ServiceModel } from '../../models/ServiceOrderModel'
 
+function clearServiceForm() {
+  setTimeout(() => {
+    document.getElementById("service-name").value = ""
+    document.getElementById("service-price").value = ""
+  }, 500)
+}
+
+
 function ServiceOrder() {
   const classes = useStyles();
 
@@ -40,8 +48,9 @@ function ServiceOrder() {
   const [deliveryDate, setDeliveryDate] = React.useState(new Date())
 
   const updateServiceField = e => {
+    const updatedService = service
     setService({
-      ...service,
+      ...updatedService,
       [e.target.name]: e.target.value
     })
   }
@@ -67,15 +76,18 @@ function ServiceOrder() {
       service.price = parseFloat(service.price)
       const serviceAdd = service
       setServices([...services, serviceAdd])
-      setService({
-        ...service
-      })
+    }
+  }
+
+  const getTotalPrice = () => {
+    if (services.length) {
+      return services.map((elem) => elem.price)
+        .reduce((accumulator, currentValue) => accumulator + currentValue)
     }
   }
 
   function onRemoveService(indexService) {
-    const newServices = services.filter((elem) => services.indexOf(elem) !== indexService);
-    console.log(newServices)
+    const newServices = services.filter((_, index) => index !== indexService);
     setServices(newServices);
   }
 
@@ -95,12 +107,35 @@ function ServiceOrder() {
             renderInput={(params) => <TextField {...params}
               color="secondary" label="Informe o cliente" variant="outlined" />}
           />
+          <br></br>
+          <div className={classes.inlineFlexRow}>
+            <TextField
+              color="secondary"
+              value={service.name}
+              onChange={updateServiceField}
+              id="service-name"
+              name="name"
+              fullWidth label="Nome do serviço" variant="outlined" size="small" />
+            <div style={{ width: 9 }}></div>
+            <TextField
+              value={service.price}
+              onChange={updateServiceField}
+              id="service-price"
+              name="price"
+              color="secondary" label="Preço" variant="outlined" size="small" />
+            <div style={{ width: 9 }}></div>
+            <Tooltip title="Adicionar serviço" aria-label="add">
+              <IconButton aria-label="add" color='secondary' onClick={() => onAddService()}>
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
+          </div>
           <List dense component="nav"
             style={{ marginTop: 28 }}
             subheader={
               <ListSubheader component="div" style={{ marginBottom: 8 }}>
                 <Typography variant="body1">
-                  <b>Serviços a fazer</b>
+                  {getTotalPrice() ? <b>Serviços a fazer</b> : <b>Nenhum serviço adicionado</b>}
                 </Typography>
               </ListSubheader>
             }>
@@ -135,35 +170,14 @@ function ServiceOrder() {
             })}
           </List>
           <div className={classes.inlineFlexRow}>
-            <TextField
-              color="secondary"
-              value={service.name}
-              onChange={updateServiceField}
-              id="name"
-              name="name"
-              fullWidth label="Nome do serviço" variant="outlined" size="small" />
-            <div style={{ width: 9 }}></div>
-            <TextField
-              value={service.price}
-              onChange={updateServiceField}
-              id="price"
-              name="price"
-              color="secondary" label="Preço" variant="outlined" size="small" />
-            <div style={{ width: 9 }}></div>
-            <Tooltip title="Adicionar serviço" aria-label="add">
-              <IconButton aria-label="add" color='secondary' onClick={() => onAddService()}>
-                <AddIcon />
-              </IconButton>
-            </Tooltip>
-            <div style={{ width: 9 }}></div>
-          </div>
-          <br></br>
-          <Divider />
-          <div className={classes.inlineFlexRow}>
             <div></div>
-            <Typography variant="body1">
-              <span><b>Total: </b>R$ 49.99</span>
-            </Typography>
+            {
+              getTotalPrice() ?
+                <Typography variant="body1" style={{ marginRight: 20 }}>
+                  <span><b>Total: </b>R$ {getTotalPrice()}</span>
+                </Typography> :
+                null
+            }
           </div>
           <div style={{
             display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 28
