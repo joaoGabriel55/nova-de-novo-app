@@ -6,17 +6,9 @@ import CardContent from '@material-ui/core/CardContent';
 import { Divider } from '@material-ui/core';
 import TextField from '@material-ui/core/TextField';
 import Autocomplete from '@material-ui/lab/Autocomplete';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
-import ListSubheader from '@material-ui/core/ListSubheader';
-import ListItemText from '@material-ui/core/ListItemText';
-import IconButton from '@material-ui/core/IconButton';
-import DeleteIcon from '@material-ui/icons/Clear';
-import AddIcon from '@material-ui/icons/Add';
-import Tooltip from '@material-ui/core/Tooltip';
 
 import 'date-fns';
 import DateFnsUtils from '@date-io/date-fns';
@@ -30,15 +22,12 @@ import MenuItem from '@material-ui/core/MenuItem';
 
 import { ServiceOrderModel, ServiceModel } from '../../models/ServiceOrderModel'
 
-function clearServiceForm() {
-  setTimeout(() => {
-    document.getElementById("service-name").value = ""
-    document.getElementById("service-price").value = ""
-  }, 500)
-}
+import ServicesList from './ServicesList'
 
+import { getCustomersLike } from '../../services/CustomerService'
+import { getDressmakers } from '../../services/DressmakerService'
 
-function ServiceOrder() {
+export default function ServiceOrder() {
   const classes = useStyles();
 
   const [serviceOrder, setServiceOrder] = React.useState(new ServiceOrderModel());
@@ -47,17 +36,22 @@ function ServiceOrder() {
   const [entryDate, setEntryDate] = React.useState(new Date())
   const [deliveryDate, setDeliveryDate] = React.useState(new Date())
 
-  const updateServiceField = e => {
-    const updatedService = service
-    setService({
-      ...updatedService,
+  const [customers, setCustomers] = React.useState([]);
+  const [open, setOpen] = React.useState(false);
+  const loading = open && customers.length === 0;
+
+  const [dressmakers, setDressmakers] = React.useState([]);
+
+  const updateField = e => {
+    setServiceOrder({
+      ...serviceOrder,
       [e.target.name]: e.target.value
     })
   }
 
   const handleEntryDateChange = (date) => {
     setEntryDate(date);
-    serviceOrder({
+    setServiceOrder({
       ...serviceOrder,
       entryDate: date
     })
@@ -65,30 +59,54 @@ function ServiceOrder() {
 
   const handleDeliveryDateChange = (date) => {
     setDeliveryDate(date);
-    serviceOrder({
+    setServiceOrder({
       ...serviceOrder,
       deliveryDate: date
     })
   };
 
-  const onAddService = () => {
-    if (service) {
-      service.price = parseFloat(service.price)
-      const serviceAdd = service
-      setServices([...services, serviceAdd])
+  React.useEffect(() => {
+    let active = true;
+
+    if (!loading) {
+      return undefined;
     }
+
+    (async () => {
+      const response = await getCustomersLike(10, 0, '')
+      const data = response.data.rows
+      if (active) {
+        setCustomers(data)
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [loading]);
+
+  React.useEffect(() => {
+    if (!open) {
+      setCustomers([]);
+    }
+  }, [open]);
+
+  const getSelectedCustomerId = (value) => {
+    setServiceOrder({
+      ...serviceOrder,
+      customerId: value.id
+    })
   }
 
-  const getTotalPrice = () => {
-    if (services.length) {
-      return services.map((elem) => elem.price)
-        .reduce((accumulator, currentValue) => accumulator + currentValue)
-    }
-  }
-
-  function onRemoveService(indexService) {
-    const newServices = services.filter((_, index) => index !== indexService);
-    setServices(newServices);
+  const handleCustomersSearch = e => {
+    const name = e.target.value
+    getCustomersLike(10, 0, name)
+      .then(res => {
+        setCustomers(res.data.rows)
+      })
+      .catch(() => {
+        setCustomers([])
+      });
   }
 
   return (
@@ -99,86 +117,59 @@ function ServiceOrder() {
         </Typography>
         <div style={{ marginTop: 28 }}>
           <Autocomplete
+            id="asynchronous-demo"
+            size="small"
+            open={open}
+            onChange={(event, value) => getSelectedCustomerId(value)}
+            noOptionsText="Cliente não encontrado"
+            onOpen={() => {
+              setOpen(true);
+            }}
+            onClose={() => {
+              setOpen(false);
+            }}
+            getOptionSelected={(option, value) => option.id === value.id}
+            getOptionLabel={(option) => option.name}
+            options={customers}
+            loading={loading}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Informe o cliente"
+                variant="outlined"
+                color="secondary"
+                onChange={handleCustomersSearch}
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+              />
+            )}
+          />
+          {/* <Autocomplete
             id="combo-box-demo"
             size="small"
-            options={top100Films}
-            getOptionLabel={(option) => option.title}
+            options={customers}
+            noOptionsText="Cliente não encontrado"
+            getOptionLabel={(option) => option.name}
             style={{ width: '100%' }}
-            renderInput={(params) => <TextField {...params}
-              color="secondary" label="Informe o cliente" variant="outlined" />}
-          />
-          <br></br>
-          <div className={classes.inlineFlexRow}>
-            <TextField
-              color="secondary"
-              value={service.name}
-              onChange={updateServiceField}
-              id="service-name"
-              name="name"
-              fullWidth label="Nome do serviço" variant="outlined" size="small" />
-            <div style={{ width: 9 }}></div>
-            <TextField
-              value={service.price}
-              onChange={updateServiceField}
-              id="service-price"
-              name="price"
-              color="secondary" label="Preço" variant="outlined" size="small" />
-            <div style={{ width: 9 }}></div>
-            <Tooltip title="Adicionar serviço" aria-label="add">
-              <IconButton aria-label="add" color='secondary' onClick={() => onAddService()}>
-                <AddIcon />
-              </IconButton>
-            </Tooltip>
-          </div>
-          <List dense component="nav"
-            style={{ marginTop: 28 }}
-            subheader={
-              <ListSubheader component="div" style={{ marginBottom: 8 }}>
-                <Typography variant="body1">
-                  {getTotalPrice() ? <b>Serviços a fazer</b> : <b>Nenhum serviço adicionado</b>}
-                </Typography>
-              </ListSubheader>
-            }>
-            {services.map((value) => {
-              const labelId = `checkbox-list-secondary-label-${value}`;
-              return (
-                <>
-                  <ListItem key={value} style={{ paddingTop: 12, paddingBottom: 12 }} button>
-                    <ListItemText id={labelId}  >
-                      <div style={{
-                        display: 'flex', flexDirection: 'row',
-                        justifyContent: 'space-between', alignItems: 'center',
-                        marginRight: 18
-                      }}>
-                        <div>
-                          {value.name}
-                        </div>
-                        <div style={{ marginRight: 18 }}>
-                          R$ {value.price}
-                        </div>
-                      </div>
-                    </ListItemText>
-                    <ListItemSecondaryAction>
-                      <IconButton onClick={() => onRemoveService(services.indexOf(value))} aria-label="delete">
-                        <DeleteIcon />
-                      </IconButton>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                  <Divider />
-                </>
-              );
-            })}
-          </List>
-          <div className={classes.inlineFlexRow}>
-            <div></div>
-            {
-              getTotalPrice() ?
-                <Typography variant="body1" style={{ marginRight: 20 }}>
-                  <span><b>Total: </b>R$ {getTotalPrice()}</span>
-                </Typography> :
-                null
+            renderInput={
+              (params) => <TextField {...params}
+                onChange={handleCustomersSearch}
+                color="secondary" label="Informe o cliente" variant="outlined"
+              />
             }
-          </div>
+          /> */}
+          <br></br>
+          <ServicesList
+            service={service} setService={setService}
+            services={services} setServices={setServices}
+          />
           <div style={{
             display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 28
           }}>
@@ -229,14 +220,13 @@ function ServiceOrder() {
               />
             </MuiPickersUtilsProvider>
             <FormControl required variant="outlined" size="small" fullWidth className={classes.formControl}>
-              <InputLabel
-                id="demo-simple-select-outlined-label">Período de entrega</InputLabel>
+              <InputLabel>Período de entrega</InputLabel>
               <Select
-                labelId="demo-simple-select"
-                id="contract"
-                name="contract"
+                id="deliveryPeriod"
+                name="deliveryPeriod"
                 label="Período de entrega"
-
+                onChange={updateField}
+                value={serviceOrder.deliveryPeriod ? serviceOrder.deliveryPeriod : ''}
               >
                 <MenuItem value={'T'}>Manhã</MenuItem>
                 <MenuItem value={'M'}>Tarde</MenuItem>
@@ -247,7 +237,7 @@ function ServiceOrder() {
             id="combo-box-demo"
             size="small"
             options={top100Films}
-            getOptionLabel={(option) => option.title}
+            getOptionLabel={(option) => option.name}
             style={{ width: '100%' }}
             renderInput={(params) => <TextField {...params}
               style={{ marginTop: 18, marginBottom: 8 }}
@@ -285,12 +275,6 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(2),
     marginLeft: theme.spacing(1)
   },
-  inlineFlexRow: {
-    display: 'flex', flexDirection: 'row',
-    justifyContent: 'space-between', alignItems: 'center',
-    marginTop: 8,
-    marginRight: 8
-  },
   pos: {
     marginBottom: 12,
   },
@@ -298,106 +282,7 @@ const useStyles = makeStyles((theme) => ({
 
 // Top 100 films as rated by IMDb users. http://www.imdb.com/chart/top
 const top100Films = [
-  { title: 'The Shawshank Redemption', year: 1994 },
-  { title: 'The Godfather', year: 1972 },
-  { title: 'The Godfather: Part II', year: 1974 },
-  { title: 'The Dark Knight', year: 2008 },
-  { title: '12 Angry Men', year: 1957 },
-  { title: "Schindler's List", year: 1993 },
-  { title: 'Pulp Fiction', year: 1994 },
-  { title: 'The Lord of the Rings: The Return of the King', year: 2003 },
-  { title: 'The Good, the Bad and the Ugly', year: 1966 },
-  { title: 'Fight Club', year: 1999 },
-  { title: 'The Lord of the Rings: The Fellowship of the Ring', year: 2001 },
-  { title: 'Star Wars: Episode V - The Empire Strikes Back', year: 1980 },
-  { title: 'Forrest Gump', year: 1994 },
-  { title: 'Inception', year: 2010 },
-  { title: 'The Lord of the Rings: The Two Towers', year: 2002 },
-  { title: "One Flew Over the Cuckoo's Nest", year: 1975 },
-  { title: 'Goodfellas', year: 1990 },
-  { title: 'The Matrix', year: 1999 },
-  { title: 'Seven Samurai', year: 1954 },
-  { title: 'Star Wars: Episode IV - A New Hope', year: 1977 },
-  { title: 'City of God', year: 2002 },
-  { title: 'Se7en', year: 1995 },
-  { title: 'The Silence of the Lambs', year: 1991 },
-  { title: "It's a Wonderful Life", year: 1946 },
-  { title: 'Life Is Beautiful', year: 1997 },
-  { title: 'The Usual Suspects', year: 1995 },
-  { title: 'Léon: The Professional', year: 1994 },
-  { title: 'Spirited Away', year: 2001 },
-  { title: 'Saving Private Ryan', year: 1998 },
-  { title: 'Once Upon a Time in the West', year: 1968 },
-  { title: 'American History X', year: 1998 },
-  { title: 'Interstellar', year: 2014 },
-  { title: 'Casablanca', year: 1942 },
-  { title: 'City Lights', year: 1931 },
-  { title: 'Psycho', year: 1960 },
-  { title: 'The Green Mile', year: 1999 },
-  { title: 'The Intouchables', year: 2011 },
-  { title: 'Modern Times', year: 1936 },
-  { title: 'Raiders of the Lost Ark', year: 1981 },
-  { title: 'Rear Window', year: 1954 },
-  { title: 'The Pianist', year: 2002 },
-  { title: 'The Departed', year: 2006 },
-  { title: 'Terminator 2: Judgment Day', year: 1991 },
-  { title: 'Back to the Future', year: 1985 },
-  { title: 'Whiplash', year: 2014 },
-  { title: 'Gladiator', year: 2000 },
-  { title: 'Memento', year: 2000 },
-  { title: 'The Prestige', year: 2006 },
-  { title: 'The Lion King', year: 1994 },
-  { title: 'Apocalypse Now', year: 1979 },
-  { title: 'Alien', year: 1979 },
-  { title: 'Sunset Boulevard', year: 1950 },
-  { title: 'Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb', year: 1964 },
-  { title: 'The Great Dictator', year: 1940 },
-  { title: 'Cinema Paradiso', year: 1988 },
-  { title: 'The Lives of Others', year: 2006 },
-  { title: 'Grave of the Fireflies', year: 1988 },
-  { title: 'Paths of Glory', year: 1957 },
-  { title: 'Django Unchained', year: 2012 },
-  { title: 'The Shining', year: 1980 },
-  { title: 'WALL·E', year: 2008 },
-  { title: 'American Beauty', year: 1999 },
-  { title: 'The Dark Knight Rises', year: 2012 },
-  { title: 'Princess Mononoke', year: 1997 },
-  { title: 'Aliens', year: 1986 },
-  { title: 'Oldboy', year: 2003 },
-  { title: 'Once Upon a Time in America', year: 1984 },
-  { title: 'Witness for the Prosecution', year: 1957 },
-  { title: 'Das Boot', year: 1981 },
-  { title: 'Citizen Kane', year: 1941 },
-  { title: 'North by Northwest', year: 1959 },
-  { title: 'Vertigo', year: 1958 },
-  { title: 'Star Wars: Episode VI - Return of the Jedi', year: 1983 },
-  { title: 'Reservoir Dogs', year: 1992 },
-  { title: 'Braveheart', year: 1995 },
-  { title: 'M', year: 1931 },
-  { title: 'Requiem for a Dream', year: 2000 },
-  { title: 'Amélie', year: 2001 },
-  { title: 'A Clockwork Orange', year: 1971 },
-  { title: 'Like Stars on Earth', year: 2007 },
-  { title: 'Taxi Driver', year: 1976 },
-  { title: 'Lawrence of Arabia', year: 1962 },
-  { title: 'Double Indemnity', year: 1944 },
-  { title: 'Eternal Sunshine of the Spotless Mind', year: 2004 },
-  { title: 'Amadeus', year: 1984 },
-  { title: 'To Kill a Mockingbird', year: 1962 },
-  { title: 'Toy Story 3', year: 2010 },
-  { title: 'Logan', year: 2017 },
-  { title: 'Full Metal Jacket', year: 1987 },
-  { title: 'Dangal', year: 2016 },
-  { title: 'The Sting', year: 1973 },
-  { title: '2001: A Space Odyssey', year: 1968 },
-  { title: "Singin' in the Rain", year: 1952 },
-  { title: 'Toy Story', year: 1995 },
-  { title: 'Bicycle Thieves', year: 1948 },
-  { title: 'The Kid', year: 1921 },
-  { title: 'Inglourious Basterds', year: 2009 },
-  { title: 'Snatch', year: 2000 },
-  { title: '3 Idiots', year: 2009 },
-  { title: 'Monty Python and the Holy Grail', year: 1975 },
+  { id: 1, name: 'Ana', year: 1994 },
+  { id: 2, name: 'Bruno', year: 1972 },
+  { id: 3, name: 'Carlos', year: 1974 }
 ];
-
-export default ServiceOrder;
