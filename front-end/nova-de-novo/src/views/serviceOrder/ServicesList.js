@@ -9,13 +9,49 @@ import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Clear';
 import AddIcon from '@material-ui/icons/Add';
 import Tooltip from '@material-ui/core/Tooltip';
+import NumberFormat from 'react-number-format';
+import PropTypes from 'prop-types';
 
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import { Divider } from '@material-ui/core';
 
+function NumberFormatCustom(props) {
+    const { inputRef, onChange, ...other } = props;
 
-export default function ServicesList({ services, setServices, service, setService }) {
+    return (
+        <NumberFormat
+            {...other}
+            getInputRef={inputRef}
+            onValueChange={(values) => {
+                onChange({
+                    target: {
+                        name: props.name,
+                        value: values.value,
+                    },
+                });
+            }}
+            thousandSeparator
+            isNumericString
+            prefix="R$"
+        />
+    );
+}
+
+NumberFormatCustom.propTypes = {
+    inputRef: PropTypes.func.isRequired,
+    name: PropTypes.string.isRequired,
+    onChange: PropTypes.func.isRequired,
+};
+
+export default function ServicesList({
+    services,
+    setServices,
+    service,
+    setService,
+    serviceOrder,
+    setServiceOrder
+}) {
     const classes = useStyles();
 
     const updateServiceField = e => {
@@ -31,17 +67,18 @@ export default function ServicesList({ services, setServices, service, setServic
             service.price = parseFloat(service.price)
             const serviceAdd = service
             setServices([...services, serviceAdd])
+            setServiceOrder({
+                ...serviceOrder,
+                totalPrice: serviceOrder.totalPrice += service.price
+            })
         }
     }
 
-    const getTotalPrice = () => {
-        if (services.length) {
-            return services.map((elem) => elem.price)
-                .reduce((accumulator, currentValue) => accumulator + currentValue)
-        }
-    }
-
-    function onRemoveService(indexService) {
+    function onRemoveService(indexService, service) {
+        setServiceOrder({
+            ...serviceOrder,
+            totalPrice: serviceOrder.totalPrice -= service.price
+        })
         const newServices = services.filter((_, index) => index !== indexService);
         setServices(newServices);
     }
@@ -55,14 +92,25 @@ export default function ServicesList({ services, setServices, service, setServic
                     onChange={updateServiceField}
                     id="service-name"
                     name="name"
-                    fullWidth label="Nome do serviço" variant="outlined" size="small" />
+                    fullWidth
+                    label="Nome do serviço"
+                    variant="outlined"
+                    size="small"
+                />
                 <div style={{ width: 9 }}></div>
                 <TextField
                     value={service.price}
                     onChange={updateServiceField}
                     id="service-price"
                     name="price"
-                    color="secondary" label="Preço" variant="outlined" size="small" />
+                    color="secondary"
+                    label="Preço"
+                    variant="outlined"
+                    size="small"
+                    InputProps={{
+                        inputComponent: NumberFormatCustom,
+                    }}
+                />
                 <div style={{ width: 9 }}></div>
                 <Tooltip title="Adicionar serviço" aria-label="add">
                     <IconButton aria-label="add" color='secondary' onClick={() => onAddService()}>
@@ -75,7 +123,7 @@ export default function ServicesList({ services, setServices, service, setServic
                 subheader={
                     <ListSubheader component="div" style={{ marginBottom: 8 }}>
                         <Typography variant="body1">
-                            {getTotalPrice() ? <b>Serviços a fazer</b> : <b>Nenhum serviço adicionado</b>}
+                            {services.length > 0 ? <b>Serviços a fazer</b> : <b>Nenhum serviço adicionado</b>}
                         </Typography>
                     </ListSubheader>
                 }>
@@ -99,7 +147,7 @@ export default function ServicesList({ services, setServices, service, setServic
                                     </div>
                                 </ListItemText>
                                 <ListItemSecondaryAction>
-                                    <IconButton onClick={() => onRemoveService(services.indexOf(value))} aria-label="delete">
+                                    <IconButton onClick={() => onRemoveService(services.indexOf(value), value)} aria-label="delete">
                                         <DeleteIcon />
                                     </IconButton>
                                 </ListItemSecondaryAction>
@@ -109,16 +157,6 @@ export default function ServicesList({ services, setServices, service, setServic
                     );
                 })}
             </List>
-            <div className={classes.inlineFlexRow}>
-                <div></div>
-                {
-                    getTotalPrice() ?
-                        <Typography variant="body1" style={{ marginRight: 20 }}>
-                            <span><b>Total: </b>R$ {getTotalPrice()}</span>
-                        </Typography> :
-                        null
-                }
-            </div>
         </>
     )
 }

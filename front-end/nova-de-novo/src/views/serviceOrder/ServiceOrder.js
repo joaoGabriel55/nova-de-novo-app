@@ -4,9 +4,6 @@ import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import { Divider } from '@material-ui/core';
-import TextField from '@material-ui/core/TextField';
-import Autocomplete from '@material-ui/lab/Autocomplete';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 
@@ -23,9 +20,10 @@ import MenuItem from '@material-ui/core/MenuItem';
 import { ServiceOrderModel, ServiceModel } from '../../models/ServiceOrderModel'
 
 import ServicesList from './ServicesList'
+import ServiceOrderAutocomplete from './components/ServiceOrderAutocomplete'
 
 import { getCustomersLike } from '../../services/CustomerService'
-import { getDressmakers } from '../../services/DressmakerService'
+import { getDressmakersLike } from '../../services/DressmakerService'
 
 export default function ServiceOrder() {
   const classes = useStyles();
@@ -37,9 +35,6 @@ export default function ServiceOrder() {
   const [deliveryDate, setDeliveryDate] = React.useState(new Date())
 
   const [customers, setCustomers] = React.useState([]);
-  const [open, setOpen] = React.useState(false);
-  const loading = open && customers.length === 0;
-
   const [dressmakers, setDressmakers] = React.useState([]);
 
   const updateField = e => {
@@ -68,10 +63,6 @@ export default function ServiceOrder() {
   React.useEffect(() => {
     let active = true;
 
-    if (!loading) {
-      return undefined;
-    }
-
     (async () => {
       const response = await getCustomersLike(10, 0, '')
       const data = response.data.rows
@@ -83,23 +74,50 @@ export default function ServiceOrder() {
     return () => {
       active = false;
     };
-  }, [loading]);
+  }, []);
 
   React.useEffect(() => {
-    if (!open) {
-      setCustomers([]);
-    }
-  }, [open]);
+    let active = true;
+
+    (async () => {
+      const response = await getDressmakersLike(10, 0, '')
+      const data = response.data.rows
+      if (active) {
+        setDressmakers(data)
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const getSelectedCustomerId = (value) => {
-    setServiceOrder({
-      ...serviceOrder,
-      customerId: value.id
-    })
+    if (value) {
+      setServiceOrder({
+        ...serviceOrder,
+        customerId: value.id
+      })
+    }
+  }
+
+  const getSelectedDressmakersId = (value) => {
+    if (value) {
+      setServiceOrder({
+        ...serviceOrder,
+        dressmakerId: value.id
+      })
+    }
   }
 
   const handleCustomersSearch = e => {
     const name = e.target.value
+    if (!name) {
+      setServiceOrder({
+        ...serviceOrder,
+        customerId: undefined
+      })
+    }
     getCustomersLike(10, 0, name)
       .then(res => {
         setCustomers(res.data.rows)
@@ -109,6 +127,28 @@ export default function ServiceOrder() {
       });
   }
 
+  const handleDressmakersSearch = e => {
+    const name = e.target.value
+    if (!name) {
+      setServiceOrder({
+        ...serviceOrder,
+        dressmakerId: undefined
+      })
+    }
+    getDressmakersLike(10, 0, name)
+      .then(res => {
+        setDressmakers(res.data.rows)
+      })
+      .catch(() => {
+        setDressmakers([])
+      });
+  }
+
+  const getTotalPrice = () => {
+    if (serviceOrder.totalPrice > 0)
+      return serviceOrder.totalPrice
+  }
+
   return (
     <Card className={classes.root}>
       <CardContent>
@@ -116,60 +156,29 @@ export default function ServiceOrder() {
           Gerar nova Ordem de Serviço
         </Typography>
         <div style={{ marginTop: 28 }}>
-          <Autocomplete
-            id="asynchronous-demo"
-            size="small"
-            open={open}
-            onChange={(event, value) => getSelectedCustomerId(value)}
-            noOptionsText="Cliente não encontrado"
-            onOpen={() => {
-              setOpen(true);
-            }}
-            onClose={() => {
-              setOpen(false);
-            }}
-            getOptionSelected={(option, value) => option.id === value.id}
-            getOptionLabel={(option) => option.name}
-            options={customers}
-            loading={loading}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Informe o cliente"
-                variant="outlined"
-                color="secondary"
-                onChange={handleCustomersSearch}
-                InputProps={{
-                  ...params.InputProps,
-                  endAdornment: (
-                    <>
-                      {loading ? <CircularProgress color="inherit" size={20} /> : null}
-                      {params.InputProps.endAdornment}
-                    </>
-                  ),
-                }}
-              />
-            )}
+          <ServiceOrderAutocomplete
+            label={"Informe o nome do cliente"}
+            noOptionsText={"Cliente não encontrado"}
+            handleSearch={handleCustomersSearch}
+            getSelected={getSelectedCustomerId}
+            collectionData={customers}
           />
-          {/* <Autocomplete
-            id="combo-box-demo"
-            size="small"
-            options={customers}
-            noOptionsText="Cliente não encontrado"
-            getOptionLabel={(option) => option.name}
-            style={{ width: '100%' }}
-            renderInput={
-              (params) => <TextField {...params}
-                onChange={handleCustomersSearch}
-                color="secondary" label="Informe o cliente" variant="outlined"
-              />
-            }
-          /> */}
           <br></br>
           <ServicesList
             service={service} setService={setService}
             services={services} setServices={setServices}
+            serviceOrder={serviceOrder} setServiceOrder={setServiceOrder}
           />
+          <div className={classes.inlineFlexRow}>
+            <div></div>
+            {
+              getTotalPrice() ?
+                <Typography variant="body1" style={{ marginRight: 20 }}>
+                  <span><b>Total: </b>R$ {getTotalPrice()}</span>
+                </Typography> :
+                null
+            }
+          </div>
           <div style={{
             display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 28
           }}>
@@ -233,15 +242,13 @@ export default function ServiceOrder() {
               </Select>
             </FormControl>
           </div>
-          <Autocomplete
-            id="combo-box-demo"
-            size="small"
-            options={top100Films}
-            getOptionLabel={(option) => option.name}
-            style={{ width: '100%' }}
-            renderInput={(params) => <TextField {...params}
-              style={{ marginTop: 18, marginBottom: 8 }}
-              color="secondary" label="Informe a costureira" variant="outlined" />}
+          <br></br>
+          <ServiceOrderAutocomplete
+            label={"Informe o nome da costureira"}
+            noOptionsText={"Costureira não encontrada"}
+            handleSearch={handleDressmakersSearch}
+            getSelected={getSelectedDressmakersId}
+            collectionData={dressmakers}
           />
         </div>
       </CardContent>
@@ -265,8 +272,13 @@ const useStyles = makeStyles((theme) => ({
     margin: '0 2px',
     transform: 'scale(0.8)',
   },
+  inlineFlexRow: {
+    display: 'flex', flexDirection: 'row',
+    justifyContent: 'space-between', alignItems: 'center',
+    marginTop: 8,
+    marginRight: 8
+  },
   spacing: {
-    // flex: '1 1 100%'
     display: 'flex',
     justifyContent: 'flex-end',
     marginRight: 8
@@ -279,10 +291,3 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: 12,
   },
 }))
-
-// Top 100 films as rated by IMDb users. http://www.imdb.com/chart/top
-const top100Films = [
-  { id: 1, name: 'Ana', year: 1994 },
-  { id: 2, name: 'Bruno', year: 1972 },
-  { id: 3, name: 'Carlos', year: 1974 }
-];
