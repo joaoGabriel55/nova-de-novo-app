@@ -329,8 +329,7 @@ const findByIdAndCustomerAndDressmakerId = async (req, res) => {
 }
 
 const store = async (req, res) => {
-    const { deliveryDate, deliveryPeriod, totalPrice, customerId, dressmakerId } = req.body
-    const entryDate = new Date()
+    const { entryDate, deliveryDate, deliveryPeriod, totalPrice, customerId, dressmakerId } = req.body
     const serviceOrder = {
         deliveryDate, entryDate, deliveryPeriod, totalPrice,
         statusService: 'PENDING', statusPayment: false,

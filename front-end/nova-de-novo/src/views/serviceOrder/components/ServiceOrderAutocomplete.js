@@ -10,6 +10,7 @@ export default function ServiceOrderAutocomplete(props) {
         <Autocomplete
             id="asynchronous-demo"
             size="small"
+            required
             closeIcon={null}
             onChange={(_, value) => getSelected(value)}
             noOptionsText={noOptionsText}
@@ -20,6 +21,7 @@ export default function ServiceOrderAutocomplete(props) {
                 <TextField
                     {...params}
                     label={label}
+                    required
                     variant="outlined"
                     color="secondary"
                     onChange={handleSearch}

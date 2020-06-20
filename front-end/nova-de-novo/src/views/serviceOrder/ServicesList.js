@@ -96,6 +96,7 @@ export default function ServicesList({
                     label="Nome do serviço"
                     variant="outlined"
                     size="small"
+                    required
                 />
                 <div style={{ width: 9 }}></div>
                 <TextField
@@ -107,6 +108,7 @@ export default function ServicesList({
                     label="Preço"
                     variant="outlined"
                     size="small"
+                    required
                     InputProps={{
                         inputComponent: NumberFormatCustom,
                     }}

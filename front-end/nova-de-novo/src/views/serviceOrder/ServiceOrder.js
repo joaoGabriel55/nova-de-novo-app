@@ -1,4 +1,5 @@
 import React from 'react';
+import { snackbarService } from "uno-material-ui";
 import { makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
@@ -22,6 +23,7 @@ import { ServiceOrderModel, ServiceModel } from '../../models/ServiceOrderModel'
 import ServicesList from './ServicesList'
 import ServiceOrderAutocomplete from './components/ServiceOrderAutocomplete'
 
+import { createServiceOrder, createService } from '../../services/ServiceOrderService'
 import { getCustomersLike } from '../../services/CustomerService'
 import { getDressmakersLike } from '../../services/DressmakerService'
 
@@ -149,115 +151,145 @@ export default function ServiceOrder() {
       return serviceOrder.totalPrice
   }
 
+  async function saveServiceOrder(e) {
+    e.preventDefault()
+    try {
+      console.log(serviceOrder)
+      if (services.length === 0) {
+        snackbarService.showSnackbar('Adicione ao menos um serviço.', 'info')
+        return;
+      }
+      const response = await createServiceOrder(serviceOrder)
+      const serviceOrderSaved = response.data
+      for (const serv of services) {
+        serv.serviceOrderId = serviceOrderSaved.id
+        await createService(serv)
+      }
+      snackbarService.showSnackbar('Ordem de Serviço gerada com sucesso!', 'success')
+    } catch (error) {
+      snackbarService.showSnackbar('Problema ao gerar Ordem de Serviço', 'error')
+    }
+  }
+
   return (
     <Card className={classes.root}>
-      <CardContent>
-        <Typography variant="h6">
-          Gerar nova Ordem de Serviço
-        </Typography>
-        <div style={{ marginTop: 28 }}>
-          <ServiceOrderAutocomplete
-            label={"Informe o nome do cliente"}
-            noOptionsText={"Cliente não encontrado"}
-            handleSearch={handleCustomersSearch}
-            getSelected={getSelectedCustomerId}
-            collectionData={customers}
-          />
-          <br></br>
-          <ServicesList
-            service={service} setService={setService}
-            services={services} setServices={setServices}
-            serviceOrder={serviceOrder} setServiceOrder={setServiceOrder}
-          />
-          <div className={classes.inlineFlexRow}>
-            <div></div>
-            {
-              getTotalPrice() ?
-                <Typography variant="body1" style={{ marginRight: 20 }}>
-                  <span><b>Total: </b>R$ {getTotalPrice()}</span>
-                </Typography> :
-                null
-            }
+      <form onSubmit={saveServiceOrder}>
+        <CardContent>
+          <Typography variant="h6">
+            Gerar nova Ordem de Serviço
+          </Typography>
+          <div style={{ marginTop: 28 }} >
+            <ServiceOrderAutocomplete
+              label={"Informe o nome do cliente"}
+              noOptionsText={"Cliente não encontrado"}
+              handleSearch={handleCustomersSearch}
+              getSelected={getSelectedCustomerId}
+              collectionData={customers}
+            />
+            <br></br>
+            <ServicesList
+              service={service} setService={setService}
+              services={services} setServices={setServices}
+              serviceOrder={serviceOrder} setServiceOrder={setServiceOrder}
+            />
+            <div className={classes.inlineFlexRow}>
+              <div></div>
+              {
+                getTotalPrice() ?
+                  <Typography variant="body1" style={{ marginRight: 20 }}>
+                    <span><b>Total: </b>R$ {getTotalPrice()}</span>
+                  </Typography> :
+                  null
+              }
+            </div>
+            <div style={{
+              display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 28
+            }}>
+              <MuiPickersUtilsProvider utils={DateFnsUtils} locale={brLocale}>
+                <KeyboardDatePicker
+                  autoOk
+                  style={{ marginRight: 4 }}
+                  disableToolbar
+                  color="secondary"
+                  fullWidth
+                  variant="inline"
+                  inputVariant="outlined"
+                  format="dd/MM/yyyy"
+                  margin="normal"
+                  id="entryDate"
+                  name="entryDate"
+                  label="Data de entrada"
+                  invalidDateMessage="Formato da data inválido"
+                  size="small"
+                  value={entryDate}
+                  onChange={handleEntryDateChange}
+                  required
+                  KeyboardButtonProps={{
+                    'aria-label': 'change date',
+                  }}
+                />
+              </MuiPickersUtilsProvider>
+              <MuiPickersUtilsProvider utils={DateFnsUtils} locale={brLocale}>
+                <KeyboardDatePicker
+                  autoOk
+                  style={{ marginLeft: 4 }}
+                  disableToolbar
+                  color="secondary"
+                  fullWidth
+                  variant="inline"
+                  inputVariant="outlined"
+                  format="dd/MM/yyyy"
+                  margin="normal"
+                  id="deliveryDate"
+                  name="deliveryDate"
+                  label="Data de entrega"
+                  invalidDateMessage="Formato da data inválido"
+                  size="small"
+                  value={deliveryDate}
+                  onChange={handleDeliveryDateChange}
+                  required
+                  KeyboardButtonProps={{
+                    'aria-label': 'change date',
+                  }}
+                />
+              </MuiPickersUtilsProvider>
+              <FormControl required variant="outlined" size="small" fullWidth className={classes.formControl}>
+                <InputLabel>Período de entrega</InputLabel>
+                <Select
+                  id="deliveryPeriod"
+                  name="deliveryPeriod"
+                  label="Período de entrega"
+                  onChange={updateField}
+                  required
+                  value={serviceOrder.deliveryPeriod ? serviceOrder.deliveryPeriod : ''}
+                >
+                  <MenuItem value={'T'}>Manhã</MenuItem>
+                  <MenuItem value={'M'}>Tarde</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
+            <br></br>
+            <ServiceOrderAutocomplete
+              label={"Informe o nome da costureira"}
+              noOptionsText={"Costureira não encontrada"}
+              handleSearch={handleDressmakersSearch}
+              getSelected={getSelectedDressmakersId}
+              collectionData={dressmakers}
+            />
           </div>
-          <div style={{
-            display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 28
-          }}>
-            <MuiPickersUtilsProvider utils={DateFnsUtils} locale={brLocale}>
-              <KeyboardDatePicker
-                autoOk
-                style={{ marginRight: 4 }}
-                disableToolbar
-                color="secondary"
-                fullWidth
-                variant="inline"
-                inputVariant="outlined"
-                format="dd/MM/yyyy"
-                margin="normal"
-                id="entryDate"
-                name="entryDate"
-                label="Data de entrada"
-                invalidDateMessage="Formato da data inválido"
-                size="small"
-                value={entryDate}
-                onChange={handleEntryDateChange}
-                KeyboardButtonProps={{
-                  'aria-label': 'change date',
-                }}
-              />
-            </MuiPickersUtilsProvider>
-            <MuiPickersUtilsProvider utils={DateFnsUtils} locale={brLocale}>
-              <KeyboardDatePicker
-                autoOk
-                style={{ marginLeft: 4 }}
-                disableToolbar
-                color="secondary"
-                fullWidth
-                variant="inline"
-                inputVariant="outlined"
-                format="dd/MM/yyyy"
-                margin="normal"
-                id="deliveryDate"
-                name="deliveryDate"
-                label="Data de entrega"
-                invalidDateMessage="Formato da data inválido"
-                size="small"
-                value={deliveryDate}
-                onChange={handleDeliveryDateChange}
-                KeyboardButtonProps={{
-                  'aria-label': 'change date',
-                }}
-              />
-            </MuiPickersUtilsProvider>
-            <FormControl required variant="outlined" size="small" fullWidth className={classes.formControl}>
-              <InputLabel>Período de entrega</InputLabel>
-              <Select
-                id="deliveryPeriod"
-                name="deliveryPeriod"
-                label="Período de entrega"
-                onChange={updateField}
-                value={serviceOrder.deliveryPeriod ? serviceOrder.deliveryPeriod : ''}
-              >
-                <MenuItem value={'T'}>Manhã</MenuItem>
-                <MenuItem value={'M'}>Tarde</MenuItem>
-              </Select>
-            </FormControl>
-          </div>
-          <br></br>
-          <ServiceOrderAutocomplete
-            label={"Informe o nome da costureira"}
-            noOptionsText={"Costureira não encontrada"}
-            handleSearch={handleDressmakersSearch}
-            getSelected={getSelectedDressmakersId}
-            collectionData={dressmakers}
-          />
-        </div>
-      </CardContent>
-      <Divider />
-      <CardActions className={classes.spacing}>
-        <Button
-          style={{ color: 'white' }} variant="contained" disableElevation color="primary" size="large"
-        >Finalizar</Button>
-      </CardActions>
+        </CardContent>
+        <Divider />
+        <CardActions className={classes.spacing}>
+          <Button
+            style={{ color: 'white' }}
+            type="submit"
+            variant="contained"
+            disableElevation
+            color="primary"
+            size="large"
+          >Finalizar</Button>
+        </CardActions>
+      </form>
     </Card>
   );
 }

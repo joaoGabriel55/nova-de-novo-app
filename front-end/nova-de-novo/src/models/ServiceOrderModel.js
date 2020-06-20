@@ -1,6 +1,6 @@
 export class ServiceOrderModel {
     entryDate = new Date()
-    deliveryDate
+    deliveryDate = new Date()
     deliveryPeriod
     totalPrice = 0.0
     statusService = 'PENDING'
@@ -13,4 +13,5 @@ export class ServiceOrderModel {
 export class ServiceModel {
     name
     price
+    serviceOrderId
 }
