@@ -1,4 +1,5 @@
 import React from 'react';
+import { useParams, useHistory } from "react-router-dom";
 import { snackbarService } from "uno-material-ui";
 import { makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
@@ -18,17 +19,21 @@ import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 
-import { ServiceOrderModel, ServiceModel } from '../../models/ServiceOrderModel'
+import { ServiceOrderModel, ServiceModel, serviceOrderModelParser } from '../../models/ServiceOrderModel'
+import { CustomerModel } from '../../models/CustomerModel'
+import { DressmakerModel } from '../../models/DressmakerModel'
 
 import ServicesList from './ServicesList'
 import ServiceOrderAutocomplete from './components/ServiceOrderAutocomplete'
 
-import { createServiceOrder, createService } from '../../services/ServiceOrderService'
-import { getCustomersLike } from '../../services/CustomerService'
-import { getDressmakersLike } from '../../services/DressmakerService'
+import { createServiceOrder, createService, getServiceOrderById } from '../../services/ServiceOrderService'
+import { getCustomersLike, getCustomerById } from '../../services/CustomerService'
+import { getDressmakersLike, getDressmakerById } from '../../services/DressmakerService'
 
 export default function ServiceOrder() {
   const classes = useStyles();
+  const { id } = useParams();
+  const history = useHistory();
 
   const [serviceOrder, setServiceOrder] = React.useState(new ServiceOrderModel());
   const [service, setService] = React.useState(new ServiceModel());
@@ -37,7 +42,9 @@ export default function ServiceOrder() {
   const [deliveryDate, setDeliveryDate] = React.useState(new Date())
 
   const [customers, setCustomers] = React.useState([]);
+  const [customer, setCustomer] = React.useState(new CustomerModel());
   const [dressmakers, setDressmakers] = React.useState([]);
+  const [dressmaker, setDressmaker] = React.useState(new DressmakerModel());
 
   const updateField = e => {
     setServiceOrder({
@@ -61,6 +68,39 @@ export default function ServiceOrder() {
       deliveryDate: date
     })
   };
+
+  React.useEffect(() => {
+    if (id) {
+      let active = true;
+      (async () => {
+        if (active) {
+          try {
+            let response = await getServiceOrderById(id)
+            const serviceOrderFound = serviceOrderModelParser(response.data)
+
+            setServiceOrder(serviceOrderFound)
+            setEntryDate(serviceOrderFound.entryDate)
+            setDeliveryDate(serviceOrderFound.deliveryDate)
+            setServices(serviceOrderFound.services)
+
+            response = await getCustomerById(serviceOrderFound.customerId)
+            setCustomer(response.data)
+
+            response = await getDressmakerById(serviceOrderFound.dressmakerId)
+            setDressmaker(response.data)
+
+            return serviceOrderFound
+          } catch (error) {
+            snackbarService.showSnackbar(`Ordem de Serviço num. ${id} não encontrada`, 'info')
+            history.replace('/ordem-de-servico')
+          }
+        }
+      })();
+      return () => {
+        active = false;
+      };
+    }
+  }, [])
 
   React.useEffect(() => {
     let active = true;
@@ -96,6 +136,7 @@ export default function ServiceOrder() {
 
   const getSelectedCustomerId = (value) => {
     if (value) {
+      setCustomer(value)
       setServiceOrder({
         ...serviceOrder,
         customerId: value.id
@@ -105,16 +146,18 @@ export default function ServiceOrder() {
 
   const getSelectedDressmakersId = (value) => {
     if (value) {
+      setDressmaker(value)
       setServiceOrder({
         ...serviceOrder,
         dressmakerId: value.id
       })
+      console.log(serviceOrder)
     }
   }
 
-  const handleCustomersSearch = e => {
-    const name = e.target.value
+  const handleCustomersSearch = name => {
     if (!name) {
+      setCustomer(new CustomerModel())
       setServiceOrder({
         ...serviceOrder,
         customerId: undefined
@@ -129,8 +172,7 @@ export default function ServiceOrder() {
       });
   }
 
-  const handleDressmakersSearch = e => {
-    const name = e.target.value
+  const handleDressmakersSearch = name => {
     if (!name) {
       setServiceOrder({
         ...serviceOrder,
@@ -171,9 +213,14 @@ export default function ServiceOrder() {
     }
   }
 
+  async function updateServiceOrder(e) {
+    e.preventDefault()
+    snackbarService.showSnackbar('Ordem de Serviço atualizada com sucesso!', 'success')
+  }
+
   return (
     <Card className={classes.root}>
-      <form onSubmit={saveServiceOrder}>
+      <form onSubmit={id ? updateServiceOrder : saveServiceOrder}>
         <CardContent>
           <Typography variant="h6">
             Gerar nova Ordem de Serviço
@@ -181,6 +228,7 @@ export default function ServiceOrder() {
           <div style={{ marginTop: 28 }} >
             <ServiceOrderAutocomplete
               label={"Informe o nome do cliente"}
+              valueProp={customer}
               noOptionsText={"Cliente não encontrado"}
               handleSearch={handleCustomersSearch}
               getSelected={getSelectedCustomerId}
@@ -271,6 +319,7 @@ export default function ServiceOrder() {
             <br></br>
             <ServiceOrderAutocomplete
               label={"Informe o nome da costureira"}
+              valueProp={dressmaker}
               noOptionsText={"Costureira não encontrada"}
               handleSearch={handleDressmakersSearch}
               getSelected={getSelectedDressmakersId}
@@ -287,7 +336,7 @@ export default function ServiceOrder() {
             disableElevation
             color="primary"
             size="large"
-          >Finalizar</Button>
+          >{id ? 'Atualizar' : 'Finalizar'}</Button>
         </CardActions>
       </form>
     </Card>

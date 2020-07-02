@@ -42,6 +42,17 @@ const SignInRouter = () => {
     )
 }
 
+const ServiceOrderComponent = (pathParam) => {
+    return (
+        <RouteWithLayout
+            component={ServiceOrder}
+            exact
+            layout={Main}
+            path={pathParam ? `/ordem-de-servico/:${pathParam}` : '/ordem-de-servico'}
+        />
+    )
+}
+
 const Routes = () => {
     const [userLogged, setUserLogged] = React.useContext(AuthContext);
     const history = useHistory()
@@ -92,12 +103,8 @@ const Routes = () => {
                 layout={Main}
                 path="/home"
             />
-            <RouteWithLayout
-                component={ServiceOrder}
-                exact
-                layout={Main}
-                path="/ordem-de-servico"
-            />
+            {ServiceOrderComponent()}
+            {ServiceOrderComponent('id')}
             <RouteWithLayout
                 component={ProductionMap}
                 exact

@@ -4,37 +4,38 @@ import Autocomplete from '@material-ui/lab/Autocomplete';
 // import CircularProgress from '@material-ui/core/CircularProgress';
 
 export default function ServiceOrderAutocomplete(props) {
-    const { label, noOptionsText, handleSearch, getSelected, collectionData } = props
+    const { label, valueProp, noOptionsText, handleSearch, getSelected, collectionData } = props
+    const [inputValue, setInputValue] = React.useState('');
+
+    React.useEffect(() => {
+        const loadEditValue = () => {
+            if (valueProp) {
+                setInputValue(valueProp.name)
+            }
+        }
+        loadEditValue()
+    }, [valueProp])
 
     return (
+
         <Autocomplete
-            id="asynchronous-demo"
-            size="small"
-            required
-            closeIcon={null}
-            onChange={(_, value) => getSelected(value)}
+            value={valueProp}
             noOptionsText={noOptionsText}
+            onChange={(_, newValue) => {
+                getSelected(newValue)
+
+            }}
+            inputValue={inputValue}
+            onInputChange={(_, newInputValue) => {
+                setInputValue(newInputValue)
+                handleSearch(newInputValue)
+            }}
             getOptionSelected={(option, value) => option.id === value.id}
-            getOptionLabel={(option) => option.name}
+            getOptionLabel={(option) => option ? option.name : ""}
+            id="controllable-states-demo"
             options={collectionData}
-            renderInput={(params) => (
-                <TextField
-                    {...params}
-                    label={label}
-                    required
-                    variant="outlined"
-                    color="secondary"
-                    onChange={handleSearch}
-                    InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                            <>
-                                {params.InputProps.endAdornment}
-                            </>
-                        ),
-                    }}
-                />
-            )}
+            renderInput={(params) => <TextField {...params} label={label} variant="outlined" />}
         />
+
     )
 }
