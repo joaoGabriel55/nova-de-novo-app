@@ -1,6 +1,9 @@
 import models, { sequelize } from '../models';
 import { validateEmail, validatePhone } from '../utils/validatorUtils'
 import { Exception } from '../exceptions/responseException'
+
+import { findCustomerById } from '../services/CustomerService'
+
 const Sequelize = require('sequelize');
 
 const validateCustomer = (res, customer) => {
@@ -59,7 +62,7 @@ const index = async (req, res) => {
 const findById = async (req, res) => {
     const idRequest = parseInt(req.params.id)
     try {
-        const customerFound = await models.Customer.findOne({ where: { id: idRequest, active: true } })
+        const customerFound = await findCustomerById(idRequest)
         if (!customerFound)
             return Exception(res, 404, `Customer ${idRequest} not found`)
         return res.json(customerFound)
