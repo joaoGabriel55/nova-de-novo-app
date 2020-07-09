@@ -30,11 +30,13 @@ export default function ServiceOrderAutocomplete(props) {
                 setInputValue(newInputValue)
                 handleSearch(newInputValue)
             }}
+            disableClearable={true}
             getOptionSelected={(option, value) => option.id === value.id}
             getOptionLabel={(option) => option ? option.name : ""}
             id="controllable-states-demo"
             options={collectionData}
-            renderInput={(params) => <TextField {...params} label={label} variant="outlined" />}
+            size="small"
+            renderInput={(params) => <TextField color="secondary" {...params} label={label} variant="outlined" />}
         />
 
     )

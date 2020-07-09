@@ -10,7 +10,7 @@ const { Op } = require("sequelize");
 const validateDate = (date, dataCompare) => {
     console.log(date, dataCompare)
 
-    if (date.getTime() < dataCompare.getTime())
+    if (date.getDate() < dataCompare.getDate())
         return false
     return true
 }

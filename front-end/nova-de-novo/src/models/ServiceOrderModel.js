@@ -1,4 +1,5 @@
 export class ServiceOrderModel {
+    id
     entryDate = new Date()
     deliveryDate = new Date()
     deliveryPeriod
@@ -19,6 +20,7 @@ export class ServiceModel {
 export function serviceOrderModelParser(object) {
 
     const serviceOrder = new ServiceOrderModel()
+    serviceOrder.id = object.id
     serviceOrder.entryDate = object.entryDate
     serviceOrder.deliveryDate = object.deliveryDate
     serviceOrder.deliveryPeriod = object.deliveryPeriod

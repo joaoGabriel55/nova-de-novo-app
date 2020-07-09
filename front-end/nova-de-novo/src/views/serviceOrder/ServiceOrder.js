@@ -15,9 +15,13 @@ import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/picker
 import brLocale from "date-fns/locale/pt-BR";
 
 import Select from '@material-ui/core/Select';
-import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormControl from '@material-ui/core/FormControl';
+import FormLabel from '@material-ui/core/FormLabel';
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
 
 import { ServiceOrderModel, ServiceModel, serviceOrderModelParser } from '../../models/ServiceOrderModel'
 import { CustomerModel } from '../../models/CustomerModel'
@@ -26,7 +30,7 @@ import { DressmakerModel } from '../../models/DressmakerModel'
 import ServicesList from './ServicesList'
 import ServiceOrderAutocomplete from './components/ServiceOrderAutocomplete'
 
-import { createServiceOrder, createService, getServiceOrderById } from '../../services/ServiceOrderService'
+import { createServiceOrder, updateServiceOrder, getServiceOrderById } from '../../services/ServiceOrderService'
 import { getCustomersLike, getCustomerById } from '../../services/CustomerService'
 import { getDressmakersLike, getDressmakerById } from '../../services/DressmakerService'
 
@@ -100,7 +104,7 @@ export default function ServiceOrder() {
         active = false;
       };
     }
-  }, [])
+  }, [id, history])
 
   React.useEffect(() => {
     let active = true;
@@ -193,34 +197,48 @@ export default function ServiceOrder() {
       return serviceOrder.totalPrice
   }
 
-  async function saveServiceOrder(e) {
+  const handleRadioServiceStatusChange = (event) => {
+    let value = event.target.value
+    if (value) {
+      setServiceOrder({
+        ...serviceOrder,
+        statusService: value
+      })
+    }
+  }
+
+  const handleRadioPaymentStatusChange = (event) => {
+    let value = (event.target.value === 'true')
+    setServiceOrder({
+      ...serviceOrder,
+      statusPayment: value
+    })
+  };
+
+  async function saveOrUpdateServiceOrder(e) {
     e.preventDefault()
+    let isEdit = id && serviceOrder.id
     try {
-      console.log(serviceOrder)
       if (services.length === 0) {
         snackbarService.showSnackbar('Adicione ao menos um serviço.', 'info')
         return;
       }
-      const response = await createServiceOrder(serviceOrder)
-      const serviceOrderSaved = response.data
-      for (const serv of services) {
-        serv.serviceOrderId = serviceOrderSaved.id
-        await createService(serv)
-      }
-      snackbarService.showSnackbar('Ordem de Serviço gerada com sucesso!', 'success')
+      serviceOrder.services = services
+      console.log(serviceOrder)
+      if (isEdit)
+        await updateServiceOrder(id, serviceOrder)
+      else
+        await createServiceOrder(serviceOrder)
+      console.log(serviceOrder)
+      snackbarService.showSnackbar(`Ordem de Serviço ${isEdit ? 'atualizada' : 'gerada'} com sucesso!`, 'success')
     } catch (error) {
-      snackbarService.showSnackbar('Problema ao gerar Ordem de Serviço', 'error')
+      snackbarService.showSnackbar(`Problema ao ${isEdit ? 'atualizar' : 'gerar'} Ordem de Serviço`, 'error')
     }
-  }
-
-  async function updateServiceOrder(e) {
-    e.preventDefault()
-    snackbarService.showSnackbar('Ordem de Serviço atualizada com sucesso!', 'success')
   }
 
   return (
     <Card className={classes.root}>
-      <form onSubmit={id ? updateServiceOrder : saveServiceOrder}>
+      <form onSubmit={saveOrUpdateServiceOrder}>
         <CardContent>
           <Typography variant="h6">
             Gerar nova Ordem de Serviço
@@ -302,11 +320,12 @@ export default function ServiceOrder() {
                 />
               </MuiPickersUtilsProvider>
               <FormControl required variant="outlined" size="small" fullWidth className={classes.formControl}>
-                <InputLabel>Período de entrega</InputLabel>
+                <InputLabel color="secondary">Período de entrega</InputLabel>
                 <Select
                   id="deliveryPeriod"
                   name="deliveryPeriod"
                   label="Período de entrega"
+                  color="secondary"
                   onChange={updateField}
                   required
                   value={serviceOrder.deliveryPeriod ? serviceOrder.deliveryPeriod : ''}
@@ -326,6 +345,51 @@ export default function ServiceOrder() {
               collectionData={dressmakers}
             />
           </div>
+          <FormControl style={{ marginTop: 28 }} component="fieldset" color="secondary">
+            <FormLabel component="legend">Situação do serviço</FormLabel>
+            <RadioGroup
+              row aria-label="status-service"
+              value={serviceOrder.statusService}
+              defaultValue="PENDING"
+              onChange={handleRadioServiceStatusChange}
+              name="status-service">
+              <FormControlLabel
+                value="PENDING"
+                disabled={id ? false : true}
+                control={<Radio color="secondary" />}
+                label="Pendente"
+              />
+              <FormControlLabel
+                value="FINISHED"
+                disabled={id ? false : true}
+                control={<Radio color="secondary" />}
+                label="Finalizado"
+              />
+            </RadioGroup>
+          </FormControl>
+          <br />
+          <FormControl style={{ marginTop: 18 }} component="fieldset" color="secondary">
+            <FormLabel component="legend">Situação de pagamento</FormLabel>
+            <RadioGroup
+              row aria-label="status-payment"
+              value={serviceOrder.statusPayment}
+              defaultValue={serviceOrder.statusPayment}
+              onChange={handleRadioPaymentStatusChange}
+              name="status-payment">
+              <FormControlLabel
+                value={false}
+                disabled={id ? false : true}
+                control={<Radio color="secondary" />}
+                label="Não pago"
+              />
+              <FormControlLabel
+                value={true}
+                disabled={id ? false : true}
+                control={<Radio color="secondary" />}
+                label="Pago"
+              />
+            </RadioGroup>
+          </FormControl>
         </CardContent>
         <Divider />
         <CardActions className={classes.spacing}>
@@ -339,7 +403,7 @@ export default function ServiceOrder() {
           >{id ? 'Atualizar' : 'Finalizar'}</Button>
         </CardActions>
       </form>
-    </Card>
+    </Card >
   );
 }
 
