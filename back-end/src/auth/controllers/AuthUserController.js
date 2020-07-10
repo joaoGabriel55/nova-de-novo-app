@@ -9,7 +9,7 @@ dotenv.config();
 let refreshTokens = []
 
 const generateAccessToken = (user) => {
-    return jwt.sign(user, process.env.TOKEN_SECRET, { expiresIn: '30s' })
+    return jwt.sign(user, process.env.TOKEN_SECRET, { expiresIn: '3600s' })
 }
 
 const loginUser = async (req, res) => {

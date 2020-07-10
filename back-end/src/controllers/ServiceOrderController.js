@@ -1,11 +1,16 @@
 import models, { sequelize } from '../models';
 import { Exception } from '../exceptions/responseException'
+
+import { findCustomerById } from '../services/CustomerService'
+import { findDressmakerById } from '../services/DressmakerService'
+
+
 const { Op } = require("sequelize");
 
 const validateDate = (date, dataCompare) => {
     console.log(date, dataCompare)
 
-    if (date.getTime() < dataCompare.getTime())
+    if (date.getDate() < dataCompare.getDate())
         return false
     return true
 }
@@ -16,7 +21,25 @@ const validateStatus = (status) => {
     return true
 }
 
-const validateServiceOrder = (res, service) => {
+const validateServices = (res, services) => {
+    if (!services || services.length === 0)
+        return Exception(res, 400, 'Services are required')
+
+    for (const service of services) {
+        if (!service.name || !service.price)
+            return Exception(res, 400, 'Check if all services contains name and price')
+    }
+    return null
+}
+
+const validateServiceOrder = async (res, service) => {
+    if (!service.entryDate || service.entryDate === '')
+        return Exception(res, 400, 'Entry date is required')
+
+    if (!validateDate(new Date(service.entryDate), new Date()) ||
+        !validateDate(new Date(service.deliveryDate), new Date(service.entryDate))) {
+        return Exception(res, 400, 'Entry date is invalid')
+    }
 
     if (!service.deliveryDate || service.deliveryDate === '')
         return Exception(res, 400, 'Delivery date is required')
@@ -31,18 +54,24 @@ const validateServiceOrder = (res, service) => {
     if (!(service.deliveryPeriod.toUpperCase() === 'T') && !(service.deliveryPeriod.toUpperCase() === 'M'))
         return Exception(res, 400, 'Delivery period must be \'T\' or \'M\'')
 
-    if (!service.status || service.status === '')
-        return Exception(res, 400, 'Status is required')
-    if (!validateStatus(service.status))
-        return Exception(res, 400, 'Status must be \'FINISHED\' or \'PENDING\'')
+    if (service.id) {
+        if (!service.statusService || service.statusService === '')
+            return Exception(res, 400, 'Status service is required')
+        if (!validateStatus(service.statusService))
+            return Exception(res, 400, 'Status service must be \'FINISHED\' or \'PENDING\'')
+        if (!service.statusPayment || service.statusPayment === '')
+            return Exception(res, 400, 'Status payment is required')
+    }
 
     if (!service.customerId || service.customerId === '')
         return Exception(res, 400, 'Customer ID is required')
+    if (await findCustomerById(service.customerId) === null)
+        return Exception(res, 400, 'Customer not found')
+
     if (!service.dressmakerId || service.dressmakerId === '')
         return Exception(res, 400, 'Dressmaker ID is required')
-
-    if (!service.totalPrice || service.totalPrice < 0)
-        return Exception(res, 400, 'Total price is required or invalid')
+    if (await findDressmakerById(service.dressmakerId) === null)
+        return Exception(res, 400, 'Dressmaker not found')
 
     return null
 }
@@ -324,17 +353,59 @@ const findByIdAndCustomerAndDressmakerId = async (req, res) => {
     }
 }
 
-const store = async (req, res) => {
-    const { deliveryDate, deliveryPeriod, totalPrice, status, customerId, dressmakerId } = req.body
-    const entryDate = new Date()
-    const serviceOrder = { deliveryDate, entryDate, deliveryPeriod, totalPrice, status, customerId, dressmakerId }
+const getTotalPrice = (services) => {
+    const totalPrice = services.map(elem => elem.price).reduce((accumulator, currentValue) => {
+        return accumulator + currentValue
+    })
+    return totalPrice
+}
 
-    const error = validateServiceOrder(res, serviceOrder)
+const deleteOldServices = async (idServiceOrder, services) => {
+    const servicesDB = await models.Service.findAll({ where: { serviceOrderId: idServiceOrder } })
+
+    const servicesIdDB = servicesDB.map(serv => serv.id)
+    const servicesId = services.filter(elem => elem.id).map(serv => serv.id)
+    const servicesIdFiltered = servicesIdDB.filter(id => !servicesId.includes(id));
+
+    if (servicesIdFiltered.length !== 0) {
+        servicesIdFiltered.forEach(async id => {
+            await models.Service.destroy({ where: { id: id } })
+        });
+    }
+
+}
+
+const storeServices = async (serviceOrderId, services) => {
+    for (const serv of services) {
+        serv.serviceOrderId = serviceOrderId
+        if (!serv.id)
+            await models.Service.create(serv)
+        else {
+            if (await models.Service.findOne({ where: { id: serv.id } }))
+                await models.Service.update(serv, { where: { id: serv.id } })
+        }
+    }
+}
+
+const store = async (req, res) => {
+    const { entryDate, deliveryDate, deliveryPeriod, services, customerId, dressmakerId } = req.body
+    const serviceOrder = {
+        deliveryDate, entryDate, deliveryPeriod,
+        statusService: 'PENDING', statusPayment: false,
+        customerId, dressmakerId
+    }
+    let error = await validateServices(res, services)
+    if (error)
+        return error
+    error = await validateServiceOrder(res, serviceOrder)
     if (error)
         return error
 
+    serviceOrder['totalPrice'] = getTotalPrice(services)
+
     try {
         const result = await models.ServiceOrder.create(serviceOrder);
+        await storeServices(result.id, services)
         return res.status(201).json(result)
     } catch (error) {
         return Exception(res, 500, 'Error to create new Service Order')
@@ -342,7 +413,10 @@ const store = async (req, res) => {
 }
 
 const update = async (req, res) => {
-    const { id, deliveryDate, deliveryPeriod, totalPrice, status, customerId, dressmakerId } = req.body
+    const {
+        id, entryDate, deliveryDate, deliveryPeriod, totalPrice, statusService,
+        statusPayment, services, customerId, dressmakerId
+    } = req.body
     const idRequest = req.params.id
 
     console.log(idRequest, id)
@@ -350,18 +424,30 @@ const update = async (req, res) => {
     if (parseInt(idRequest) !== id)
         return Exception(res, 400, 'Path ID and payload ID does not matches')
 
-    const service = { id, deliveryDate, deliveryPeriod, totalPrice, status, customerId, dressmakerId }
-
     if (!await models.ServiceOrder.findOne({ where: { id: id } }))
         return Exception(res, 404, 'Service Order not found')
 
-    const error = validateServiceOrder(res, service)
+    const serviceOrder = {
+        id, entryDate, deliveryDate, deliveryPeriod, totalPrice,
+        statusService, statusPayment, customerId, dressmakerId
+    }
+
+    let error = await validateServices(res, services)
     if (error)
         return error
 
+    error = await validateServiceOrder(res, serviceOrder)
+    if (error)
+        return error
+
+    await deleteOldServices(id, services)
+    await storeServices(id, services)
+    const servicesDB = await models.Service.findAll({ where: { serviceOrderId: id } })
+    serviceOrder['totalPrice'] = getTotalPrice(servicesDB)
+
     try {
-        await models.ServiceOrder.update(service, { where: { id: id } })
-        return res.status(200).json(service)
+        await models.ServiceOrder.update(serviceOrder, { where: { id: id } })
+        return res.status(200).json(serviceOrder)
     } catch (error) {
         console.log(error)
         return Exception(res, 500, 'Error to update Service Order')

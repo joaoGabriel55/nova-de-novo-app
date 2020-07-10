@@ -1,7 +1,7 @@
 import models, { sequelize } from '../models';
 import { validatePhone } from '../utils/validatorUtils'
 import { Exception } from '../exceptions/responseException'
-
+const Sequelize = require('sequelize');
 
 const contractType = {
     clt: 'CLT',
@@ -42,9 +42,7 @@ const index = async (req, res) => {
     const offset = req.query.offset
 
     const selector = like ? {
-        name: {
-            [Op.like]: `%${like}%`
-        },
+        name: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), 'LIKE', `${like.toLowerCase()}%`),
         active: true
     } : { active: true }
 

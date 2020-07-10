@@ -18,6 +18,7 @@
     "react-dom": "^16.13.1",
     "react-input-mask": "^2.0.4",
     "react-moment": "^0.9.7",
+    "react-number-format": "^4.4.1",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.1",
     "uno-material-ui": "^2.0.6"
