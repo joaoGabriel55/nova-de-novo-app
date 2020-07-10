@@ -358,6 +358,20 @@ const getTotalPrice = (services) => {
         return accumulator + currentValue
     })
     return totalPrice
+}
+
+const deleteOldServices = async (idServiceOrder, services) => {
+    const servicesDB = await models.Service.findAll({ where: { serviceOrderId: idServiceOrder } })
+
+    const servicesIdDB = servicesDB.map(serv => serv.id)
+    const servicesId = services.filter(elem => elem.id).map(serv => serv.id)
+    const servicesIdFiltered = servicesIdDB.filter(id => !servicesId.includes(id));
+
+    if (servicesIdFiltered.length !== 0) {
+        servicesIdFiltered.forEach(async id => {
+            await models.Service.destroy({ where: { id: id } })
+        });
+    }
 
 }
 
@@ -421,15 +435,18 @@ const update = async (req, res) => {
     let error = await validateServices(res, services)
     if (error)
         return error
+
     error = await validateServiceOrder(res, serviceOrder)
     if (error)
         return error
 
-    serviceOrder['totalPrice'] = getTotalPrice(services)
+    await deleteOldServices(id, services)
+    await storeServices(id, services)
+    const servicesDB = await models.Service.findAll({ where: { serviceOrderId: id } })
+    serviceOrder['totalPrice'] = getTotalPrice(servicesDB)
 
     try {
         await models.ServiceOrder.update(serviceOrder, { where: { id: id } })
-        await storeServices(id, services)
         return res.status(200).json(serviceOrder)
     } catch (error) {
         console.log(error)
