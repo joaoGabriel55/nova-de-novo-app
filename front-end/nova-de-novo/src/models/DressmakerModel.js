@@ -3,5 +3,5 @@ export class DressmakerModel {
     phone
     address
     contract
-    admission
+    admission = new Date()
 }

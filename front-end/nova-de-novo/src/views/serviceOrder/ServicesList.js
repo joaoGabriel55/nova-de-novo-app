@@ -54,6 +54,18 @@ export default function ServicesList({
 }) {
     const classes = useStyles();
 
+    const [fullWidth, setFullWidth] = React.useState(false)
+
+    const onresize = () => {
+        let width = document.body.clientWidth;
+        if (width && width <= 780) {
+            setFullWidth(true)
+        } else {
+            setFullWidth(false)
+        }
+    }
+    window.addEventListener("resize", onresize);
+
     const updateServiceField = e => {
         const updatedService = service
         setService({
@@ -63,7 +75,7 @@ export default function ServicesList({
     }
 
     const onAddService = () => {
-        if (service) {
+        if (service && service.name && service.price) {
             service.price = parseFloat(service.price)
             const serviceAdd = service
             setServices([...services, serviceAdd])
@@ -98,7 +110,7 @@ export default function ServicesList({
                     size="small"
                     required={services.length === 0 ? true : false}
                 />
-                <div style={{ width: 9 }}></div>
+                <div style={{ width: 8, height: 18 }}></div>
                 <TextField
                     value={service.price}
                     onChange={updateServiceField}
@@ -108,12 +120,13 @@ export default function ServicesList({
                     label="Preço"
                     variant="outlined"
                     size="small"
+                    fullWidth={fullWidth}
                     required={services.length === 0 ? true : false}
                     InputProps={{
                         inputComponent: NumberFormatCustom,
                     }}
                 />
-                <div style={{ width: 9 }}></div>
+                <div style={{ width: 8, height: 8 }}></div>
                 <Tooltip title="Adicionar serviço" aria-label="add">
                     <IconButton aria-label="add" color='secondary' onClick={() => onAddService()}>
                         <AddIcon />
@@ -168,6 +181,8 @@ const useStyles = makeStyles((theme) => ({
         display: 'flex', flexDirection: 'row',
         justifyContent: 'space-between', alignItems: 'center',
         marginTop: 8,
-        marginRight: 8
+        ['@media (max-width:780px)']: {
+            display: 'flex', flexDirection: 'column'
+        }
     }
 }))

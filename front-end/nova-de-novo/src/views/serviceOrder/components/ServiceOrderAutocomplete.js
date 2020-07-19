@@ -36,7 +36,7 @@ export default function ServiceOrderAutocomplete(props) {
             id="controllable-states-demo"
             options={collectionData}
             size="small"
-            renderInput={(params) => <TextField color="secondary" {...params} label={label} variant="outlined" />}
+            renderInput={(params) => <TextField required color="secondary" {...params} label={label} variant="outlined" />}
         />
 
     )

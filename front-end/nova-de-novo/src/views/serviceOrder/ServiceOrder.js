@@ -268,13 +268,11 @@ export default function ServiceOrder() {
                   null
               }
             </div>
-            <div style={{
-              display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 28
-            }}>
+            <div className={classes.deliveryForm}>
               <MuiPickersUtilsProvider utils={DateFnsUtils} locale={brLocale}>
                 <KeyboardDatePicker
                   autoOk
-                  style={{ marginRight: 4 }}
+                  className={classes.deliveryFormField}
                   disableToolbar
                   color="secondary"
                   fullWidth
@@ -298,7 +296,6 @@ export default function ServiceOrder() {
               <MuiPickersUtilsProvider utils={DateFnsUtils} locale={brLocale}>
                 <KeyboardDatePicker
                   autoOk
-                  style={{ marginLeft: 4 }}
                   disableToolbar
                   color="secondary"
                   fullWidth
@@ -328,10 +325,10 @@ export default function ServiceOrder() {
                   color="secondary"
                   onChange={updateField}
                   required
-                  value={serviceOrder.deliveryPeriod ? serviceOrder.deliveryPeriod : ''}
+                  value={serviceOrder.deliveryPeriod}
                 >
-                  <MenuItem value={'T'}>Manhã</MenuItem>
-                  <MenuItem value={'M'}>Tarde</MenuItem>
+                  <MenuItem value={'M'}>Manhã</MenuItem>
+                  <MenuItem value={'T'}>Tarde</MenuItem>
                 </Select>
               </FormControl>
             </div>
@@ -417,6 +414,15 @@ const useStyles = makeStyles((theme) => ({
     margin: '0 2px',
     transform: 'scale(0.8)',
   },
+  deliveryForm: {
+    display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 28,
+    ['@media (max-width:780px)']: {
+      display: 'flex', flexDirection: 'column'
+    },
+  },
+  deliveryFormField: {
+    marginRight: 8
+  },
   inlineFlexRow: {
     display: 'flex', flexDirection: 'row',
     justifyContent: 'space-between', alignItems: 'center',
@@ -430,7 +436,11 @@ const useStyles = makeStyles((theme) => ({
   },
   formControl: {
     marginTop: theme.spacing(2),
-    marginLeft: theme.spacing(1)
+    marginLeft: theme.spacing(1),
+    ['@media (max-width:780px)']: {
+      marginTop: theme.spacing(2),
+      marginLeft: theme.spacing(0)
+    },
   },
   pos: {
     marginBottom: 12,
