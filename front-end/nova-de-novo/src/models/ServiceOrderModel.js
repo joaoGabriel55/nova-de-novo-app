@@ -2,7 +2,7 @@ export class ServiceOrderModel {
     id
     entryDate = new Date()
     deliveryDate = new Date()
-    deliveryPeriod
+    deliveryPeriod = 'M'
     totalPrice = 0.0
     statusService = 'PENDING'
     statusPayment = false

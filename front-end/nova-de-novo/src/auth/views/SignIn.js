@@ -9,6 +9,7 @@ import Link from '@material-ui/core/Link';
 import Paper from '@material-ui/core/Paper';
 import Box from '@material-ui/core/Box';
 import Grid from '@material-ui/core/Grid';
+import Alert from '@material-ui/lab/Alert';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
@@ -35,6 +36,8 @@ export default function SignIn() {
     const classes = useStyles();
     const history = useHistory();
 
+    const [alert, setAlert] = React.useState(false)
+    const errorMessage = 'Credenciais inválidas. Verifique-as'
     const [userCredentials, setUserCredentials] = React.useState({ username: null, password: null });
     const [userLogged, setUserLogged] = React.useContext(AuthContext);
 
@@ -45,7 +48,8 @@ export default function SignIn() {
         })
     }
 
-    function signIn() {
+    function signIn(e) {
+        e.preventDefault()
         if (!userCredentials.username || !userCredentials.password)
             snackbarService.showSnackbar('Informe seu usuário e senha', 'info')
         else {
@@ -59,9 +63,9 @@ export default function SignIn() {
                     history.replace('/home')
                     setUserCredentials({})
                 })
-                .catch(() =>
-                    snackbarService.showSnackbar('Credenciais inválidas, verifique-as', 'error')
-                )
+                .catch(() => {
+                    setAlert(true)
+                })
         }
     }
 
@@ -77,7 +81,10 @@ export default function SignIn() {
                     <Typography component="h1" variant="h5">
                         Sign in
                     </Typography>
-                    <form className={classes.form} noValidate>
+                    <form className={classes.form} onSubmit={signIn}>
+                        {alert ?
+                            <Alert severity="error" onClose={() => { setAlert(false) }}>{errorMessage}</Alert> :
+                            null}
                         <TextField
                             variant="outlined"
                             color="secondary"
@@ -105,7 +112,7 @@ export default function SignIn() {
                             onChange={updateField}
                         />
                         <Button
-                            onClick={() => signIn()}
+                            type="submit"
                             fullWidth
                             variant="contained"
                             color="primary"
@@ -113,18 +120,6 @@ export default function SignIn() {
                         >
                             Entrar
                         </Button>
-                        {/* <Grid container>
-                            <Grid item xs>
-                                <Link href="#" variant="body2">
-                                    Forgot password?
-                                </Link>
-                            </Grid>
-                            <Grid item>
-                                <Link href="#" variant="body2">
-                                    {"Don't have an account? Sign Up"}
-                                </Link>
-                            </Grid>
-                        </Grid> */}
                         <Box mt={5}>
                             <Copyright />
                         </Box>

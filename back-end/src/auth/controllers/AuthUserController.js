@@ -21,16 +21,21 @@ const loginUser = async (req, res) => {
     if (!user)
         Exception(res, 400, `User '${username}' does not exists!`)
 
-    const passwordHash = user.password
+    jwt.verify(password, process.env.TOKEN_SECRET, (err, result) => {
+        console.log(err)
+        if (err) return Exception(res, 403, `Invalid password hash`)
 
-    if (!bcrypt.compareSync(password, passwordHash))
-        return Exception(res, 400, `Wrong password!`)
+        const password = result.passwordHash
+        if (!bcrypt.compareSync(password, user.password))
+            return Exception(res, 400, `Wrong password!`)
 
-    const accessToken = generateAccessToken({ username })
-    const refreshToken = jwt.sign({ username }, process.env.REFRESH_TOKEN_SECRET)
-    refreshTokens.push(refreshToken)
+        const accessToken = generateAccessToken({ username })
+        const refreshToken = jwt.sign({ username }, process.env.REFRESH_TOKEN_SECRET)
+        refreshTokens.push(refreshToken)
 
-    return res.status(200).json({ accessToken, refreshToken })
+        return res.status(200).json({ accessToken, refreshToken })
+    })
+
 }
 
 const accessToken = (req, res) => {
