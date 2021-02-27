@@ -22,12 +22,15 @@ const user = (sequelize, DataTypes) => {
             validate: {
                 notEmpty: true,
             },
+        },
+        admin: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            validate: {
+                notEmpty: false,
+            },
         }
     });
-
-    // User.associate = models => {
-    //     User.hasMany(models.Message, { onDelete: 'CASCADE' });
-    // };
 
     User.findByLogin = async login => {
         let user = await User.findOne({
