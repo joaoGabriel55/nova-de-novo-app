@@ -69,10 +69,12 @@ export default function SignIn() {
           setUserCredentials({});
         })
         .catch((err) => {
-          const { status } = err.response;
-          if (status === 401) setErrorMessage(USER_NOT_ADMIN);
-          else setErrorMessage(INVALID_CREDENTIALS);
-          setAlert(true);
+          if (err.response) {
+            const { status } = err.response;
+            if (status === 401) setErrorMessage(USER_NOT_ADMIN);
+            else setErrorMessage(INVALID_CREDENTIALS);
+            setAlert(true);
+          }
         });
     }
   }
