@@ -1,4 +1,4 @@
-import models, { sequelize } from '../models';
+import models from '../models';
 
 export async function findDressmakerById(id) {
     try {

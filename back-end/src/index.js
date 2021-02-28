@@ -44,7 +44,7 @@ async function authenticateToken(req, res, next) {
     jwt.verify(token, process.env.TOKEN_SECRET, async (err, user) => {
       console.error(err);
 
-      if (!(await userIsAdmin(user.username)))
+      if (user && !(await userIsAdmin(user.username)))
         return Exception(res, 401, `User '${user.username}' is not admin!`);
 
       if (err) return Exception(res, 403, `Invalid Token`);
